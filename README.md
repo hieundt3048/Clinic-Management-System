@@ -7,9 +7,9 @@
 
 ## How to run (Docker)
 ### 1. Build Docker's image.
-Go to the Docker file directory:
+Go to the Docker file directory: \n
 ` cd path/to/Backend/app `
-Build the image:
+Build the image: \n
 ` docker build -t your-docker-image-name . `
 ### 2. Run the Docker's image
 ` docker run -p 8080:8080 -t your-docker-image-name `
