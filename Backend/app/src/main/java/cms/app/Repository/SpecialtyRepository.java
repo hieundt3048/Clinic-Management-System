@@ -1,10 +1,11 @@
 package cms.app.Repository;
 
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import cms.app.Entity.Specialty;
 
-public interface SpecialtyRepository {
-
-    Optional<Specialty> findById(Integer id);
+@Repository
+public interface SpecialtyRepository extends JpaRepository<Specialty, Integer> {
+    
 }

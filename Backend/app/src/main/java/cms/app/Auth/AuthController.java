@@ -1,4 +1,4 @@
-package cms.app.Controller;
+package cms.app.Auth;
 
 public class AuthController {
 
