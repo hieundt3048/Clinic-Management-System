@@ -18,10 +18,10 @@ public class StandardAppointmentFactory implements AppointmentFactory {
     public Appointment createPendingAppointment(Patient patient, Doctor doctor, 
                                                 Specialty specialty, LocalDateTime appointmentDate, 
                                                 String reason) {
-        // 1. Validate dữ liệu đầu vào NGAY TẠI ĐÂY
+        // 1. Validate dữ liệu đầu vào
         validateParameters(patient, doctor, specialty, appointmentDate);
 
-        // 2. Khởi tạo đối tượng (Ở đây bạn dùng Builder hoặc Setters đều được, vì nó đã bị đóng gói kín trong Factory)
+        // 2. Khởi tạo đối tượng Appointment mới
         Appointment appointment = new Appointment();
         appointment.setPatient(patient);
         appointment.setDoctor(doctor);
@@ -29,13 +29,14 @@ public class StandardAppointmentFactory implements AppointmentFactory {
         appointment.setAppointmentDate(appointmentDate);
         appointment.setReason(reason != null ? reason.trim() : "Không ghi rõ lý do"); // Xử lý logic format data
         
-        // CÁC GIÁ TRỊ MẶC ĐỊNH CHO MỘT LỊCH KHÁM MỚI
+        // Các giá trị mặc định của lịch khám mới tạo
         appointment.setStatus(AppointmentStatus.PENDING); 
         appointment.setFollowUp(false);
         
         return appointment;
     }
 
+    // Kiểm tra thông tin trống
     private void validateParameters(Patient patient, Doctor doctor, Specialty specialty, LocalDateTime appointmentDate) {
         if (patient == null || doctor == null || specialty == null) {
             throw new IllegalArgumentException("Thông tin bệnh nhân, bác sĩ hoặc chuyên khoa không được để trống");
