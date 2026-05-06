@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -52,27 +54,44 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.error("Tên đăng nhập hoặc mật khẩu không đúng"));
     }
     
-    /**
-     * Xử lý validation errors 400
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        logger.warn("Validation failed", ex);
-        Map<String, Object> errors = new HashMap<>();
-        errors.put("success", false);
-        errors.put("timestamp", LocalDateTime.now());
-        
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            fieldErrors.put(error.getField(), error.getDefaultMessage());
-        });
-        
-        errors.put("errors", fieldErrors);
-        return ResponseEntity.badRequest().body(errors);
+    // ───Sai email hoặc mật khẩu ───
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
+        return buildError(HttpStatus.UNAUTHORIZED, "Email hoặc mật khẩu không đúng");
     }
     
+    // ───Tài khoản bị khóa ───
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<Map<String, Object>> handleDisabled(DisabledException ex) {
+        return buildError(HttpStatus.FORBIDDEN, "Tài khoản đã bị vô hiệu hóa");
+    }
+    
+    // ───Validation thất bại (DTO @Valid)───
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(err -> fieldErrors.put(err.getField(), err.getDefaultMessage()));
+    
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("message", "Dữ liệu đầu vào không hợp lệ");
+        body.put("errors", fieldErrors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+    
+    // ─── Helper ───
+    private ResponseEntity<Map<String, Object>> buildError(HttpStatus status, String message) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("message", message);
+        return ResponseEntity.status(status).body(body);
+    }
+        
     /**
-     * Xử lý IllegalArgumentException 400
+     * Xử lý IllegalArgumentException, Business logic errors (email trùng, token hết hạn...)
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Object>> handleIllegalArgument(IllegalArgumentException ex) {

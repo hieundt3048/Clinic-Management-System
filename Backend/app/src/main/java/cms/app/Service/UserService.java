@@ -7,7 +7,7 @@ import cms.app.Entity.User;
 import cms.app.Repository.UserRepository;
 
 @Service
-public class UserService {
+public class UserService{
 
     private final UserRepository userRepository;
 
@@ -16,7 +16,7 @@ public class UserService {
     }
 
     public List<User> getAllUsers() {
-        // Logic to retrieve all users from the repository
         return userRepository.findAll();
     }
+
 }
