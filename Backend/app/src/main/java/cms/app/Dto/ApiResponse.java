@@ -13,19 +13,19 @@ public class ApiResponse<T> {
     }
     
     // Tạo response thành công chỉ với data, không có message
-    // Sử dụng: ApiResponse.success(zoneList)
+    // Sử dụng: ApiResponse.success(data)
     public static <T> ApiResponse<T> success(T data) {
         return new ApiResponse<>(true, null, data);
     }
     
     // Tạo response thành công với cả message và data
-    // Sử dụng: ApiResponse.success("Tạo thành công", zone)
+    // Sử dụng: ApiResponse.success("Tạo thành công", data)
     public static <T> ApiResponse<T> success(String message, T data) {
         return new ApiResponse<>(true, message, data);
     }
     
     // Tạo response lỗi với message, không có data
-    // Sử dụng: ApiResponse.error("Zone không tồn tại")
+    // Sử dụng: ApiResponse.error("không tồn tại")
     public static <T> ApiResponse<T> error(String message) {
         return new ApiResponse<>(false, message, null);
     }
