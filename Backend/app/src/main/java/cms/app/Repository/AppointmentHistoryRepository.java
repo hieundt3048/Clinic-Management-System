@@ -92,4 +92,38 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate")   LocalDateTime toDate
     );
+
+    /** Lịch tái khám đã đặt (theo cờ isFollowUp) của một bệnh nhân, trong khoảng thời gian [fromDt, toDt). */
+    @Query("""
+        SELECT a FROM Appointment a
+        JOIN FETCH a.patient p
+        JOIN FETCH a.doctor d
+        JOIN FETCH d.specialty s
+        WHERE p.patientId = :patientId
+          AND a.isFollowUp = true
+          AND a.status IN ('PENDING', 'CONFIRMED')
+          AND a.appointmentDate >= :fromDt
+          AND a.appointmentDate < :toDt
+        ORDER BY a.appointmentDate ASC
+        """)
+    List<Appointment> findUpcomingFollowUpAppointmentsForPatient(
+            @Param("patientId") Integer patientId,
+            @Param("fromDt") LocalDateTime fromDt,
+            @Param("toDt") LocalDateTime toDt);
+
+    /** Tất cả lịch tái khám sắp tới trong hệ thống — dùng cho job nhắc nhở nội bộ / log. */
+    @Query("""
+        SELECT a FROM Appointment a
+        JOIN FETCH a.patient p
+        JOIN FETCH a.doctor d
+        JOIN FETCH d.specialty s
+        WHERE a.isFollowUp = true
+          AND a.status IN ('PENDING', 'CONFIRMED')
+          AND a.appointmentDate >= :fromDt
+          AND a.appointmentDate < :toDt
+        ORDER BY a.appointmentDate ASC
+        """)
+    List<Appointment> findAllUpcomingFollowUpAppointments(
+            @Param("fromDt") LocalDateTime fromDt,
+            @Param("toDt") LocalDateTime toDt);
 }
