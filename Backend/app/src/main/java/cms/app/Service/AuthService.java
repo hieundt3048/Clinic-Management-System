@@ -1,6 +1,8 @@
 package cms.app.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -59,14 +61,14 @@ public class AuthService implements IAuthService {
         this.userDetailsService = userDetailsService;
     }
 
-    // Đăng ký PATIENT
+
+
+
+// Đăng ký PATIENT
     @Override
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Kiểm tra email trùng
-        if (userRepo.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email đã được sử dụng: " + request.getEmail());
-        }
+        // ... existing checks
 
         // Tạo UserAccount
         User account = new User();
@@ -80,6 +82,10 @@ public class AuthService implements IAuthService {
         Patient profile = new Patient();
         profile.setFullName(request.getFullName());
         profile.setUser(account);
+        if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
+            profile.setDateOfBirth(LocalDate.parse(request.getDateOfBirth(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        }
+        profile.setGender(request.getGender());
         patientRepo.save(profile);
 
         return buildAuthResponse(account);
@@ -89,12 +95,14 @@ public class AuthService implements IAuthService {
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        // Spring Security xác thực email + password, ném exception nếu sai
+        String username = request.getUsername();
+
+        // Spring Security xác thực username + password, ném exception nếu sai
         authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(username, request.getPassword())
         );
 
-        User account = userRepo.findByEmail(request.getEmail())
+        User account = userRepo.findByEmailOrPhone(username, username)
                 .orElseThrow(() -> new ResourceNotFoundException("Tài khoản không tồn tại"));
 
         return buildAuthResponse(account);
