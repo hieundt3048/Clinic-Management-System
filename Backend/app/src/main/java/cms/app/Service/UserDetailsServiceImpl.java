@@ -25,9 +25,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User account = userRepo.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản: " + email));
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User account = userRepo.findByEmailOrPhone(username, username)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy tài khoản: " + username));
 
         return new org.springframework.security.core.userdetails.User(
                 account.getEmail(),

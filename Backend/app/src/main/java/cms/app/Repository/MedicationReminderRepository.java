@@ -27,14 +27,13 @@ public interface MedicationReminderRepository extends JpaRepository<MedicationRe
      * Được gọi bởi @Scheduled mỗi phút.
      * Điều kiện: active=true, hôm nay nằm trong [startDate, endDate], giờ khớp reminderTime.
      */
-    @Query("""
-        SELECT r FROM MedicationReminder r
-        JOIN FETCH r.patient pt
-        JOIN FETCH r.prescription p
-        WHERE r.active = true
-          AND :today BETWEEN r.startDate AND r.endDate
-          AND r.reminderTime = :currentTime
-        """)
+    @Query(value = """
+        SELECT r.*
+        FROM medication_reminder r
+        WHERE r.active = 1
+          AND :today BETWEEN r.start_date AND r.end_date
+          AND CAST(r.reminder_time AS time) = CAST(:currentTime AS time)
+        """, nativeQuery = true)
     List<MedicationReminder> findDueReminders(
             @Param("today") LocalDate today,
             @Param("currentTime") LocalTime currentTime
