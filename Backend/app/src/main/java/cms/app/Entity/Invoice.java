@@ -46,7 +46,8 @@ public class Invoice {
     @Column(columnDefinition = "NVARCHAR(50)")
     private String paymentMethod;
 
-    @Column(nullable = false)
+    /** Chỉ có giá trị khi status = PAID */
+    @Column(nullable = true)
     private LocalDateTime paidAt;
 
     public Integer getInvoiceId() {
