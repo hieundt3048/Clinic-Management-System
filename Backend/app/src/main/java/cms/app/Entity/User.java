@@ -1,5 +1,7 @@
 package cms.app.Entity;
 
+import java.util.Date;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -83,5 +85,17 @@ public class User {
 
     public void setStatus(boolean status) {
         this.status = status;
+    }
+
+    public void setGender(String string) {
+        throw new UnsupportedOperationException("Unimplemented method 'setGender'");
+    }
+
+    public void setDateOfBirth(Date date) {
+        throw new UnsupportedOperationException("Unimplemented method 'setDateOfBirth'");
+    }
+
+    public void setActive(boolean b) {
+        throw new UnsupportedOperationException("Unimplemented method 'setActive'");
     }
 }
