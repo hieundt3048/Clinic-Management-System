@@ -15,6 +15,11 @@ export const loginUser = (credentials) => {
   return apiClient.post('/auth/login', credentials);
 };
 
-// You can add other API calls here
-
+export const getCurrentUser = async () => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get("/api/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
 export default apiClient;
