@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../services/api';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -21,9 +21,9 @@ const Login = () => {
     try {
       const response = await loginUser(formData);
       setMessage('Đăng nhập thành công!');
-      // You might want to store the token and redirect the user
-      // For example: localStorage.setItem('token', response.accessToken);
-      // navigate('/dashboard'); 
+      localStorage.setItem('user', JSON.stringify(response));
+      onLogin(response);
+      navigate('/');
     } catch (error) {
       if (error.response && error.response.data) {
         setMessage(`Lỗi: ${error.response.data.message || 'Sai tên đăng nhập hoặc mật khẩu'}`);
