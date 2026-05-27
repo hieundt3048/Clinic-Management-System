@@ -2,6 +2,7 @@ package cms.app.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -40,4 +41,12 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, In
     List<MedicalRecord> findRecommendedFollowUpsDueBetween(
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate);
+    /** Load kèm patient và doctor để map DTO không cần thêm query */
+    @Query("""
+        SELECT r FROM MedicalRecord r
+        JOIN FETCH r.patient
+        JOIN FETCH r.doctor
+        WHERE r.recordId = :recordId
+        """)
+    Optional<MedicalRecord> findByIdWithDetails(@Param("recordId") Integer recordId);
 }
