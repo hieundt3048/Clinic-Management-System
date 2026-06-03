@@ -1,5 +1,7 @@
 package cms.app.Entity;
 
+import java.util.Date;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,9 +18,6 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
-
-    @Column(nullable = false, unique = true, length = 50)
-    private String username;
 
     @Column(nullable = false)
     private String passwordHash;
@@ -46,14 +45,6 @@ public class User {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPasswordHash() {
@@ -94,5 +85,17 @@ public class User {
 
     public void setStatus(boolean status) {
         this.status = status;
+    }
+
+    public void setGender(String string) {
+        throw new UnsupportedOperationException("Unimplemented method 'setGender'");
+    }
+
+    public void setDateOfBirth(Date date) {
+        throw new UnsupportedOperationException("Unimplemented method 'setDateOfBirth'");
+    }
+
+    public void setActive(boolean b) {
+        throw new UnsupportedOperationException("Unimplemented method 'setActive'");
     }
 }

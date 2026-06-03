@@ -2,7 +2,6 @@ package cms.app.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -61,14 +60,18 @@ public class AuthService implements IAuthService {
         this.userDetailsService = userDetailsService;
     }
 
-
-
-
 // Đăng ký PATIENT
     @Override
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // ... existing checks
+        // check email trùng
+        if (userRepo.existsByEmail(request.getEmail())) {
+        throw new IllegalArgumentException("Email đã được sử dụng");
+        }
+        // check phone trùng
+        if (request.getPhone() != null && userRepo.existsByPhone(request.getPhone())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng");
+        }
 
         // Tạo UserAccount
         User account = new User();
@@ -83,7 +86,7 @@ public class AuthService implements IAuthService {
         profile.setFullName(request.getFullName());
         profile.setUser(account);
         if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
-            profile.setDateOfBirth(LocalDate.parse(request.getDateOfBirth(), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            profile.setDateOfBirth(LocalDate.parse(request.getDateOfBirth()));
         }
         profile.setGender(request.getGender());
         patientRepo.save(profile);

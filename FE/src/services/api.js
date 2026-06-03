@@ -22,4 +22,5 @@ export const getCurrentUser = async () => {
   });
   return response.data;
 };
+
 export default apiClient;
