@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../services/api';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,6 +21,9 @@ const Login = () => {
     try {
       const response = await loginUser(formData);
       setMessage('Đăng nhập thành công!');
+      localStorage.setItem('user', JSON.stringify(response));
+      onLogin(response);
+      navigate('/');
     } catch (error) {
       if (error.response && error.response.data) {
         setMessage(`Lỗi: ${error.response.data.message || 'Sai tên đăng nhập hoặc mật khẩu'}`);
@@ -45,7 +50,7 @@ const Login = () => {
             </div>
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">Trang đăng nhập</h2>
             
-            {message && <p className="text-center text-red-500">{message}</p>}
+            {message && <p className="text-center text-red-500 mb-4">{message}</p>}
 
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -79,14 +84,17 @@ const Login = () => {
                     <input
                         className="shadow appearance-none border rounded w-full py-2 px-3 pl-10 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                         id="password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         placeholder="Mật khẩu"
                         value={formData.password}
                         onChange={handleChange}
                         required
                     />
-                    <span className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    <span 
+                      onClick={() => setShowPassword(!showPassword)} 
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                    >
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </span>
                 </div>
               </div>
@@ -132,3 +140,4 @@ const Login = () => {
 };
 
 export default Login;
+
