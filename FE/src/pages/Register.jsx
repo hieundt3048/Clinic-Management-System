@@ -29,7 +29,6 @@ const PasswordChecklist = ({ password }) => {
   );
 };
 
-
 const Register = () => {
   const [formData, setFormData] = useState({
     fullName: '',
@@ -86,8 +85,9 @@ const Register = () => {
             </div>
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Trang đăng ký</h2>
             
+            {message && <p className="text-center text-red-500">{message}</p>}
+
             <form onSubmit={handleSubmit}>
-              {/* ... form fields ... */}
               <div className="mb-4">
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fullName">
                   Họ và tên *

@@ -38,7 +38,7 @@ public class RegisterRequest {
     )
     private String phone;
 
-    private String dateOfBirth; // Expecting yyyy-MM-dd format
+    private String dateOfBirth;
 
     private String gender;
 
