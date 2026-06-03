@@ -1,0 +1,11 @@
+.vscode/
+Backend/app/src/main/java/cms/app/Config/AdminSeeder.java
+# Bỏ qua tất cả mọi thứ trong thư mục lớn
+*
+Backend/app/target/
+# Nhớ giữ lại file .gitignore này để cấu hình không bị mất
+!.gitignore
+
+# Bắt Git phải track 2 thư mục FE và BE
+!FE/
+!Backend/
