@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 
 const functions = [
   { name: 'Đặt lịch khám', href: '/appointments', icon: CalendarIcon, color: 'bg-blue-500' },
-  { name: 'Lịch sử khám', href: '/history', icon: ClockIcon, color: 'bg-green-500' },
+  { name: 'Lịch sử khám', href: '/appointment-history', icon: ClockIcon, color: 'bg-green-500' },
   { name: 'Hồ sơ sức khỏe', href: '/health-profile', icon: UserCircleIcon, color: 'bg-yellow-500' },
-  { name: 'Nhắc uống thuốc', href: '/reminders', icon: BellIcon, color: 'bg-red-500' },
+  { name: 'Nhắc uống thuốc', href: '/medication-reminder', icon: BellIcon, color: 'bg-red-500' },
 ];
 
 const IconButtonList = () => {

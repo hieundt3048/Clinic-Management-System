@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import cms.app.Dto.AppointmentRequestDTO;
+import cms.app.Dto.AppointmentResponseDTO;
 import cms.app.Entity.Appointment;
 import cms.app.Entity.Appointment.AppointmentStatus;
 import cms.app.Entity.Doctor;
@@ -40,7 +41,7 @@ public class AppointmentService implements IAppointmentService{
     
     @Override
     @Transactional // Đảm bảo tính toàn vẹn dữ liệu: Nếu có lỗi xảy ra ở giữa hàm, toàn bộ thao tác DB sẽ bị Rollback
-    public Appointment bookAppointment(AppointmentRequestDTO request) {
+    public AppointmentResponseDTO bookAppointment(AppointmentRequestDTO request) {
         
         // 0. Kiểm tra đầu vào (Input Validation)
         if (request.getPatientId() == null) {
@@ -81,18 +82,35 @@ public class AppointmentService implements IAppointmentService{
         }
 
         // 4. Mapping dữ liệu từ DTO sang Entity
+        boolean followUp = Boolean.TRUE.equals(request.getFollowUp());
         Appointment newAppointment = appointmentFactory.createPendingAppointment(
-                patient, doctor, specialty, request.getAppointmentDate(), request.getReason()
+                patient, doctor, specialty, request.getAppointmentDate(), request.getReason(), followUp
         );
 
         // 5. Lưu vào Database
         if (newAppointment != null) {
             Appointment savedAppointment = appointmentRepo.save(newAppointment);
-            // 6. Mapping Entity trả về Response DTO
-            return savedAppointment;
+            return toResponse(savedAppointment);
         }
         
         throw new BusinessLogicException("Không thể tạo lịch hẹn.");
+    }
+
+    private AppointmentResponseDTO toResponse(Appointment a) {
+        AppointmentResponseDTO dto = new AppointmentResponseDTO();
+        dto.setAppointmentId(a.getAppointmentId());
+        dto.setAppointmentDate(a.getAppointmentDate());
+        dto.setStatus(a.getStatus());
+        dto.setReason(a.getReason());
+        dto.setFollowUp(a.isFollowUp());
+        dto.setPatientId(a.getPatient().getPatientId());
+        dto.setPatientName(a.getPatient().getFullName());
+        dto.setDoctorId(a.getDoctor().getDoctorId());
+        dto.setDoctorName(a.getDoctor().getFullName());
+        dto.setRoomNumber(a.getDoctor().getRoomNumber());
+        dto.setSpecialtyId(a.getSpecialty().getSpecialtyId());
+        dto.setSpecialtyName(a.getSpecialty().getSpecialtyName());
+        return dto;
     }
 
     @Override

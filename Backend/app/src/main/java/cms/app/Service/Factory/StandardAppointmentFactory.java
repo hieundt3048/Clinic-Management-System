@@ -17,7 +17,7 @@ public class StandardAppointmentFactory implements AppointmentFactory {
     @Override
     public Appointment createPendingAppointment(Patient patient, Doctor doctor, 
                                                 Specialty specialty, LocalDateTime appointmentDate, 
-                                                String reason) {
+                                                String reason, boolean followUp) {
         // 1. Validate dữ liệu đầu vào
         validateParameters(patient, doctor, specialty, appointmentDate);
 
@@ -31,7 +31,7 @@ public class StandardAppointmentFactory implements AppointmentFactory {
         
         // Các giá trị mặc định của lịch khám mới tạo
         appointment.setStatus(AppointmentStatus.PENDING); 
-        appointment.setFollowUp(false);
+        appointment.setFollowUp(followUp);
         
         return appointment;
     }

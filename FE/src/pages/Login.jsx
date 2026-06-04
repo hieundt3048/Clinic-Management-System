@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api';
+import { loginUser, mapAuthResponse } from '../services/api';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = ({ onLogin }) => {
@@ -19,10 +19,12 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await loginUser(formData);
+      const { data } = await loginUser(formData);
+      const user = mapAuthResponse(data);
       setMessage('Đăng nhập thành công!');
-      localStorage.setItem('user', JSON.stringify(response));
-      onLogin(response);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', user.accessToken);
+      onLogin(user);
       navigate('/');
     } catch (error) {
       if (error.response && error.response.data) {

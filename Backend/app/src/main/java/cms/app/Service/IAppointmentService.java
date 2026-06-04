@@ -1,10 +1,10 @@
 package cms.app.Service;
 
 import cms.app.Dto.AppointmentRequestDTO;
-import cms.app.Entity.Appointment;
+import cms.app.Dto.AppointmentResponseDTO;
 
 public interface IAppointmentService {
 
-    Appointment bookAppointment(AppointmentRequestDTO request);
+    AppointmentResponseDTO bookAppointment(AppointmentRequestDTO request);
     void cancelAppointment(Integer appointmentId);
 }

@@ -1,7 +1,14 @@
 cms\app\Dto\UpdateHealthProfileRequest.class
+cms\app\Dto\FollowUpReminderResponse$ReminderKind.class
 cms\app\Service\IHealthProfileService.class
 cms\app\Dto\HealthProfileResponse.class
+cms\app\Scheduler\FollowUpReminderScheduler.class
+cms\app\Controller\FollowUpReminderController.class
 cms\app\AppApplication.class
 cms\app\Service\MedicationReminderService$1.class
+cms\app\Service\IFollowUpReminderService.class
 cms\app\Controller\HealthProfileController.class
+cms\app\Service\FollowUpReminderService.class
 cms\app\Service\HealthProfileService.class
+cms\app\Repository\AppointmentHistoryRepository.class
+cms\app\Dto\FollowUpReminderResponse.class

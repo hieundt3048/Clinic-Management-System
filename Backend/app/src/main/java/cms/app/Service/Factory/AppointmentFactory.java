@@ -14,7 +14,7 @@ public interface AppointmentFactory {
      */
     Appointment createPendingAppointment(Patient patient, Doctor doctor, 
                                          Specialty specialty, LocalDateTime appointmentDate, 
-                                         String reason);
+                                         String reason, boolean followUp);
                                          
     // Sau này nếu có thêm loại Lịch khám VIP, Lịch khám Tái khám, bạn có thể thêm hàm ở đây
     // Appointment createVipAppointment(...);

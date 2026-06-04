@@ -50,6 +50,9 @@ public class Invoice {
     @Column(nullable = true)
     private LocalDateTime paidAt;
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     public Integer getInvoiceId() {
         return invoiceId;
     }
@@ -104,6 +107,14 @@ public class Invoice {
 
     public void setPaidAt(LocalDateTime paidAt) {
         this.paidAt = paidAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
 }

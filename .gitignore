@@ -1,5 +1,6 @@
 .vscode/
 Backend/app/src/main/java/cms/app/Config/AdminSeeder.java
+Backend/app/.env
 # Bỏ qua tất cả mọi thứ trong thư mục lớn
 *
 Backend/app/target/

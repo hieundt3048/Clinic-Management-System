@@ -7,6 +7,7 @@ public class AppointmentRequestDTO {
     private Integer patientId;
     private LocalDateTime appointmentDate;
     private String reason;
+    private Boolean followUp = false;
 
     public Integer getDoctorId() {
         return doctorId;
@@ -46,5 +47,13 @@ public class AppointmentRequestDTO {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public Boolean getFollowUp() {
+        return followUp;
+    }
+
+    public void setFollowUp(Boolean followUp) {
+        this.followUp = followUp;
     }
 }

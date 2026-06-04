@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cms.app.Dto.ApiResponse;
 import cms.app.Dto.AppointmentRequestDTO;
-import cms.app.Entity.Appointment;
+import cms.app.Dto.AppointmentResponseDTO;
 import cms.app.Service.IAppointmentService;
 
 @RestController
@@ -25,13 +25,10 @@ public class AppointmentController {
 
     // API Đặt lịch khám
     @PostMapping
-    public ResponseEntity<ApiResponse<Appointment>> bookAppointment(
+    public ResponseEntity<ApiResponse<AppointmentResponseDTO>> bookAppointment(
         @RequestBody AppointmentRequestDTO request) {
         
-        // 1. Gọi Service để xử lý logic
-        Appointment resultData = appointmentService.bookAppointment(request);
-
-        // 2. Trả về chuẩn HTTP Response của Spring Boot
+        AppointmentResponseDTO resultData = appointmentService.bookAppointment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Tạo mới thành công", resultData));
     }
 

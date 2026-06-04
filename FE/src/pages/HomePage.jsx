@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import PatientDashboard from '../components/PatientDashboard';
 import DoctorDashboard from '../components/DoctorDashboard';
 import AdminDashboard from '../components/AdminDashboard';
-import { getCurrentUser } from '../services/api';
+import Sidebar from '../components/Sidebar';
+import { getStoredUser } from '../services/api';
 
 const HomePage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await getCurrentUser();
-        setUser(response.data);
-      } catch (error) {
-        console.error("Lỗi lấy thông tin người dùng:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
+    const storedUser = getStoredUser();
+    setUser(storedUser);
+    setLoading(false);
   }, []);
 
   if (loading) {
@@ -28,8 +21,7 @@ const HomePage = () => {
   }
 
   if (!user) {
-    // Điều này không nên xảy ra vì đã có PrivateRoute, nhưng để phòng ngừa
-    return <div className="text-center mt-10">Vui lòng đăng nhập.</div>;
+    return <Navigate to="/login" />;
   }
 
   const renderDashboard = () => {
@@ -46,8 +38,11 @@ const HomePage = () => {
   };
 
   return (
-    <div>
-      {renderDashboard()}
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-grow">
+        {renderDashboard()}
+      </div>
     </div>
   );
 };

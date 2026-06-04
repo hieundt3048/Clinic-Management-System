@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Register from './pages/Register';
 import Login from './pages/Login';
 import HomePage from './pages/HomePage';
@@ -9,11 +9,12 @@ import HealthProfilePage from './pages/HealthProfilePage';
 import MedicationReminderPage from './pages/MedicationReminderPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
+import MedicalHistory from './pages/MedicalHistory';
 import Header from "./components/Header";
-import IconButtonList from "./components/IconButtonList";
 import AdminDashboard from './components/AdminDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
 import PatientDashboard from './components/PatientDashboard';
+import { clearAuth } from './services/api';
 import './App.css';
 
 function App() {
@@ -27,7 +28,7 @@ function App() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    clearAuth();
     setUser(null);
   };
 
@@ -35,23 +36,27 @@ function App() {
     <Router>
       <Header user={user} onLogout={handleLogout} />
       <div className="flex">
-        {user && <IconButtonList userRole={user.role} />}
-        <main className="flex-grow p-4">
+        <main className="flex-grow">
           <Suspense fallback={<div>Loading...</div>}>
             <Routes>
+              <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<Login onLogin={setUser} />} />
               <Route path="/register" element={<Register />} />
 
               {user ? (
                 <>
-                  <Route path="/" element={<HomePage />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/doctor" element={<DoctorDashboard />} />
                   <Route path="/patient" element={<PatientDashboard />} />
-                  <Route path="/appointments" element={<AppointmentPage />} />
-                  <Route path="/appointment-history" element={<AppointmentHistoryPage />} />
-                  <Route path="/health-profile" element={<HealthProfilePage />} />
-                  <Route path="/medication-reminder" element={<MedicationReminderPage />} />
+                  {user.role === 'PATIENT' ? (
+                    <>
+                      <Route path="/appointments" element={<AppointmentPage />} />
+                      <Route path="/appointment-history" element={<AppointmentHistoryPage />} />
+                      <Route path="/health-profile" element={<HealthProfilePage />} />
+                      <Route path="/medication-reminder" element={<MedicationReminderPage />} />
+                      <Route path="/medical-history" element={<MedicalHistory />} />
+                    </>
+                  ) : null}
                   <Route path="/user-profile" element={<UserProfilePage />} />
                 </>
               ) : (

@@ -1,11 +1,15 @@
 import React from 'react';
+import PatientLayout from '../components/PatientLayout';
 
 const AppointmentHistoryPage = () => {
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Lịch sử khám bệnh</h1>
-      <p>Đây là trang xem lịch sử khám bệnh. Danh sách các cuộc hẹn đã qua và sắp tới sẽ được hiển thị ở đây.</p>
-    </div>
+    <PatientLayout pageTitle="Lịch sử đặt khám">
+      <div className="p-6">
+        <p className="text-gray-600">
+          Danh sách các cuộc hẹn đã qua và sắp tới sẽ được hiển thị tại đây.
+        </p>
+      </div>
+    </PatientLayout>
   );
 };
 
