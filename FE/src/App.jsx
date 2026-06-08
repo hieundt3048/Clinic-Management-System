@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect, Suspense } from "react";
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -11,11 +11,28 @@ import UserProfilePage from './pages/UserProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import MedicalHistory from './pages/MedicalHistory';
 import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
 import AdminDashboard from './components/AdminDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
-import PatientDashboard from './components/PatientDashboard';
 import { clearAuth } from './services/api';
 import './App.css';
+
+// Các trang KHÔNG hiện sidebar
+const NO_SIDEBAR_PATHS = ['/login', '/register'];
+
+const Layout = ({ user, children }) => {
+  const location = useLocation();
+  const hideSidebar = NO_SIDEBAR_PATHS.includes(location.pathname) || !user;
+
+  return (
+    <div className="flex min-h-[calc(100vh-4rem)] bg-gray-50">
+      {!hideSidebar && <Sidebar />}
+      <main className="flex-grow">
+        {children}
+      </main>
+    </div>
+  );
+};
 
 function App() {
   const [user, setUser] = useState(null);
@@ -35,41 +52,38 @@ function App() {
   return (
     <Router>
       <Header user={user} onLogout={handleLogout} />
-      <div className="flex">
-        <main className="flex-grow">
-          <Suspense fallback={<div>Loading...</div>}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<Login onLogin={setUser} />} />
-              <Route path="/register" element={<Register />} />
+      <Layout user={user}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Routes>
+            <Route path="/login" element={<Login onLogin={setUser} />} />
+            <Route path="/register" element={<Register />} />
 
-              {user ? (
-                <>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/doctor" element={<DoctorDashboard />} />
-                  <Route path="/patient" element={<PatientDashboard />} />
-                  {user.role === 'PATIENT' ? (
-                    <>
-                      <Route path="/appointments" element={<AppointmentPage />} />
-                      <Route path="/appointment-history" element={<AppointmentHistoryPage />} />
-                      <Route path="/health-profile" element={<HealthProfilePage />} />
-                      <Route path="/medication-reminder" element={<MedicationReminderPage />} />
-                      <Route path="/medical-history" element={<MedicalHistory />} />
-                    </>
-                  ) : null}
-                  <Route path="/user-profile" element={<UserProfilePage />} />
-                </>
-              ) : (
-                <Route path="/*" element={<Navigate to="/login" />} />
-              )}
+            {user ? (
+              <>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/doctor" element={<DoctorDashboard />} />
+                {user.role === 'PATIENT' ? (
+                  <>
+                    <Route path="/appointments" element={<AppointmentPage />} />
+                    <Route path="/appointment-history" element={<AppointmentHistoryPage />} />
+                    <Route path="/health-profile" element={<HealthProfilePage />} />
+                    <Route path="/medication-reminder" element={<MedicationReminderPage />} />
+                    <Route path="/medical-history" element={<MedicalHistory />} />
+                  </>
+                ) : null}
+                <Route path="/user-profile" element={<UserProfilePage />} />
+              </>
+            ) : (
+              <Route path="/*" element={<Navigate to="/login" />} />
+            )}
 
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </main>
-      </div>
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </Layout>
     </Router>
-  )
+  );
 }
 
 export default App;

@@ -3,7 +3,6 @@ import { Navigate } from 'react-router-dom';
 import PatientDashboard from '../components/PatientDashboard';
 import DoctorDashboard from '../components/DoctorDashboard';
 import AdminDashboard from '../components/AdminDashboard';
-import Sidebar from '../components/Sidebar';
 import { getStoredUser } from '../services/api';
 
 const HomePage = () => {
@@ -24,27 +23,16 @@ const HomePage = () => {
     return <Navigate to="/login" />;
   }
 
-  const renderDashboard = () => {
-    switch (user.role) {
-      case 'PATIENT':
-        return <PatientDashboard user={user} />;
-      case 'DOCTOR':
-        return <DoctorDashboard user={user} />;
-      case 'ADMIN':
-        return <AdminDashboard user={user} />;
-      default:
-        return <div>Vai trò không hợp lệ.</div>;
-    }
-  };
-
-  return (
-    <div className="flex">
-      <Sidebar />
-      <div className="flex-grow">
-        {renderDashboard()}
-      </div>
-    </div>
-  );
+  switch (user.role) {
+    case 'PATIENT':
+      return <PatientDashboard user={user} />;
+    case 'DOCTOR':
+      return <DoctorDashboard user={user} />;
+    case 'ADMIN':
+      return <AdminDashboard user={user} />;
+    default:
+      return <div>Vai trò không hợp lệ.</div>;
+  }
 };
 
 export default HomePage;

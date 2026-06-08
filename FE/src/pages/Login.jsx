@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser, mapAuthResponse } from '../services/api';
+import { loginUser, mapAuthResponse, getMyHealthProfile } from '../services/api';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = ({ onLogin }) => {
@@ -17,23 +17,37 @@ const Login = ({ onLogin }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await loginUser(formData);
-      const user = mapAuthResponse(data);
-      setMessage('Đăng nhập thành công!');
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('token', user.accessToken);
-      onLogin(user);
-      navigate('/');
-    } catch (error) {
-      if (error.response && error.response.data) {
-        setMessage(`Lỗi: ${error.response.data.message || 'Sai tên đăng nhập hoặc mật khẩu'}`);
-      } else {
-        setMessage('Lỗi kết nối tới máy chủ.');
+  e.preventDefault();
+  try {
+    const { data } = await loginUser(formData);
+    const user = mapAuthResponse(data);
+
+    // Nếu là PATIENT → gọi thêm /health-profile/me để lấy patientId
+    if (user.role === 'PATIENT') {
+      try {
+        // Lưu token trước để interceptor đính vào request
+        localStorage.setItem('token', user.accessToken);
+        const profileRes = await getMyHealthProfile();         // GET /api/health-profile/me
+        user.patientId = profileRes.patientId;                 // gắn patientId vào object user
+      } catch {
+        // Không lấy được profile → vẫn login bình thường, chỉ thiếu patientId
       }
     }
-  };
+
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('token', user.accessToken);
+    setMessage('Đăng nhập thành công!');
+    onLogin(user);
+    navigate('/');
+  } catch (error) {
+    if (error.response && error.response.data) {
+      setMessage(`Lỗi: ${error.response.data.message || 'Sai tên đăng nhập hoặc mật khẩu'}`);
+    } else {
+      setMessage('Lỗi kết nối tới máy chủ.');
+    }
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
