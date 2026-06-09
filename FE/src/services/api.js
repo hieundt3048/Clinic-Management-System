@@ -93,3 +93,29 @@ export const cancelAppointment = (appointmentId) =>
   apiClient.delete(`/appointments/${appointmentId}`).then((r) => r.data);
 
 export default apiClient;
+
+
+export const getActiveReminders = (patientId) =>
+  apiClient.get(`/reminders/medication/${patientId}`).then((r) => r.data);
+ 
+export const createReminder = (patientId, payload) =>
+  apiClient.post('/reminders/medication', payload, { params: { patientId } }).then((r) => r.data);
+
+export const toggleReminder = (id, active) =>
+  apiClient.patch(`/reminders/medication/${id}/toggle`, null, { params: { active } }).then((r) => r.data);
+
+export const deleteReminder = (id) =>
+  apiClient.delete(`/reminders/medication/${id}`);
+ 
+export const getMyPrescriptions = (patientId) =>
+  apiClient.get(`/prescriptions/patient/${patientId}`).then((r) => r.data);
+
+export const getMyInvoices = () =>
+  apiClient.get('/invoices/me').then((r) => r.data.data);
+ 
+
+export const getInvoiceById = (id) =>
+  apiClient.get(`/invoices/${id}`).then((r) => r.data.data);
+ 
+export const payInvoice = (id, payload) =>
+  apiClient.post(`/invoices/${id}/pay`, payload).then((r) => r.data.data);

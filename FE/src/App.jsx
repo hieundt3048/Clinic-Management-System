@@ -15,6 +15,7 @@ import Sidebar from "./components/Sidebar";
 import AdminDashboard from './components/AdminDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
 import { clearAuth } from './services/api';
+import BillingPage from './pages/BillingPage';
 import './App.css';
 
 // Các trang KHÔNG hiện sidebar
@@ -70,6 +71,7 @@ function App() {
                     <Route path="/health-profile" element={<HealthProfilePage />} />
                     <Route path="/medication-reminder" element={<MedicationReminderPage />} />
                     <Route path="/medical-history" element={<MedicalHistory />} />
+                    <Route path="/billing" element={<BillingPage />} />
                   </>
                 ) : null}
                 <Route path="/user-profile" element={<UserProfilePage />} />
