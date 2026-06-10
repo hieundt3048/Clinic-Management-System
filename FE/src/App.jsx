@@ -16,14 +16,23 @@ import AdminDashboard from './components/AdminDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
 import { clearAuth } from './services/api';
 import BillingPage from './pages/BillingPage';
+import AdminRevenuePage     from './pages/admin/AdminRevenuePage';
+import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage';
+import AdminInvoicesPage    from './pages/admin/AdminInvoicesPage';
+import AdminStaffPage       from './pages/admin/AdminStaffPage';
 import './App.css';
 
 // Các trang KHÔNG hiện sidebar
 const NO_SIDEBAR_PATHS = ['/login', '/register'];
 
+
+
 const Layout = ({ user, children }) => {
   const location = useLocation();
-  const hideSidebar = NO_SIDEBAR_PATHS.includes(location.pathname) || !user;
+
+  const isAdminPath = location.pathname.startsWith('/admin');
+  
+  const hideSidebar = NO_SIDEBAR_PATHS.includes(location.pathname) || !user || isAdminPath;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] bg-gray-50">
@@ -62,7 +71,10 @@ function App() {
             {user ? (
               <>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin"              element={<AdminRevenuePage />} />
+                <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
+                <Route path="/admin/invoices"     element={<AdminInvoicesPage />} />
+                <Route path="/admin/staff"        element={<AdminStaffPage />} />
                 <Route path="/doctor" element={<DoctorDashboard />} />
                 {user.role === 'PATIENT' ? (
                   <>

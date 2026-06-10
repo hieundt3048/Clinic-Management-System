@@ -38,7 +38,13 @@ const Login = ({ onLogin }) => {
     localStorage.setItem('token', user.accessToken);
     setMessage('Đăng nhập thành công!');
     onLogin(user);
-    navigate('/');
+    if (user.role === 'ADMIN') {
+        navigate('/admin');
+      } else if (user.role === 'DOCTOR') {
+        navigate('/doctor');
+      } else {
+        navigate('/');
+      }
   } catch (error) {
     if (error.response && error.response.data) {
       setMessage(`Lỗi: ${error.response.data.message || 'Sai tên đăng nhập hoặc mật khẩu'}`);

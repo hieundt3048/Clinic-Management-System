@@ -51,12 +51,6 @@ export function clearAuth() {
   localStorage.removeItem('token');
 }
 
-export const getSpecialties = () =>
-  apiClient.get('/catalog/specialties').then((r) => r.data.data);
-
-export const getDoctorsBySpecialty = (specialtyId) =>
-  apiClient.get('/catalog/doctors', { params: { specialtyId } }).then((r) => r.data.data);
-
 export const getExamServices = () =>
   apiClient.get('/catalog/services').then((r) => r.data.data);
 
@@ -119,3 +113,55 @@ export const getInvoiceById = (id) =>
  
 export const payInvoice = (id, payload) =>
   apiClient.post(`/invoices/${id}/pay`, payload).then((r) => r.data.data);
+
+export const getRevenue = (period) => {
+  const now = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const date  = now.toISOString().slice(0, 10);
+
+  const map = {
+    day:   () => apiClient.get('/reports/revenue/day',   { params: { date } }),
+    week:  () => apiClient.get('/reports/revenue/week',  { params: { date } }),
+    month: () => apiClient.get('/reports/revenue/month', { params: { year, month } }),
+    year:  () => apiClient.get('/reports/revenue/year',  { params: { year } }),
+  };
+  return (map[period] || map.month)().then((r) => r.data);
+};
+
+export const adminGetAllInvoices = () =>
+  apiClient.get('/invoices/all')
+    .then((r) => Array.isArray(r.data?.data) ? r.data.data : [])
+    .catch((error) => {
+      console.error("Lỗi khi lấy danh sách hóa đơn:", error);
+      return [];
+    });                   
+
+
+export const getSpecialties = () =>
+  apiClient.get('/catalog/specialties').then((r) => r.data.data);
+
+export const getDoctorsBySpecialty = (specialtyId) =>
+  apiClient.get('/catalog/doctors', { params: { specialtyId } }).then((r) => r.data.data);
+
+export const getAllDoctors = async () => {
+  const specialties = await getSpecialties();
+  const results = await Promise.allSettled(
+    specialties.map((s) => getDoctorsBySpecialty(s.specialtyId))
+  );
+  return results
+    .filter((r) => r.status === 'fulfilled')
+    .flatMap((r) => r.value || []);
+};
+
+export const getAllAppointments = () =>
+  apiClient.get('/appointments/history').then((r) => r.data);
+
+export const updateAppointmentStatus = (id, status) =>
+  apiClient.patch(`/appointments/${id}/status`, null, { params: { status } }).then((r) => r.data);
+
+export const adminCreateInvoice = (payload) =>
+  apiClient.post('/invoices', payload).then((r) => r.data.data);
+
+export const createStaff = (payload, role = 'DOCTOR') =>
+  apiClient.post('/auth/create-staff', payload, { params: { role } }).then((r) => r.data);
