@@ -47,9 +47,10 @@ public class InvoiceService implements IInvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy lịch hẹn: " + request.getAppointmentId()));
 
-        if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
+        if (appointment.getStatus() != AppointmentStatus.COMPLETED
+                && appointment.getStatus() != AppointmentStatus.CONFIRMED) {
             throw new InvalidRequestException(
-                    "Chỉ được lập hóa đơn cho lịch hẹn đã hoàn thành (COMPLETED). Trạng thái hiện tại: "
+                    "Chỉ được lập hóa đơn cho lịch hẹn đã xác nhận hoặc hoàn thành. Trạng thái hiện tại: "
                             + appointment.getStatus());
         }
 
@@ -99,6 +100,14 @@ public class InvoiceService implements IInvoiceService {
             throw new InvalidRequestException("Bạn không có quyền xem hóa đơn này.");
         }
         return toResponse(invoice);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<InvoiceResponse> getAllInvoices() {
+        return invoiceRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override

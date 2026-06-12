@@ -11,12 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import cms.app.Dto.AppointmentFilterRequest;
 import cms.app.Dto.AppointmentHistoryResponse;
 import cms.app.Entity.Appointment;
+import cms.app.Entity.ServiceCatalog;
 import cms.app.Exception.ResourceNotFoundException;
 import cms.app.Repository.AppointmentHistoryRepository;
 
-//Xử lý logic lấy lịch sử đặt khám cho từng role.
 @Service
-@Transactional(readOnly = true) //Đánh dấu toàn bộ service này là read-only, chỉ có các method cụ thể mới có @Transactional để ghi dữ liệu.
+@Transactional(readOnly = true)
 public class AppointmentHistoryService implements IAppointmentHistoryService {
 
     private final AppointmentHistoryRepository appointmentRepo;
@@ -86,39 +86,39 @@ public class AppointmentHistoryService implements IAppointmentHistoryService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Map từ Appointment Entity sang DTO response.
-     * Tách riêng để dễ bảo trì và test.
-     */
     private AppointmentHistoryResponse toResponse(Appointment a) {
+        ServiceCatalog svc = a.getService(); // nullable — lịch cũ không có service
+
         return new AppointmentHistoryResponse(
                 a.getAppointmentId(),
                 a.getAppointmentDate(),
                 a.getStatus(),
                 a.getReason(),
                 a.isFollowUp(),
+                // Bệnh nhân
                 a.getPatient().getPatientId(),
                 a.getPatient().getFullName(),
+                a.getPatient().getUser().getPhone(),        // patientPhone
+                // Bác sĩ
                 a.getDoctor().getDoctorId(),
                 a.getDoctor().getFullName(),
                 a.getDoctor().getRoomNumber(),
+                // Chuyên khoa
                 a.getDoctor().getSpecialty().getSpecialtyId(),
-                a.getDoctor().getSpecialty().getSpecialtyName()
+                a.getDoctor().getSpecialty().getSpecialtyName(),
+                // Dịch vụ khám (null nếu lịch cũ không lưu)
+                svc != null ? svc.getServiceId()   : null,
+                svc != null ? svc.getServiceName() : null,
+                svc != null ? svc.getBasePrice()   : null
         );
     }
 
-    // Kiểm tra filter có rỗng không — nếu rỗng dùng query đơn giản hơn
     private boolean isEmptyFilter(AppointmentFilterRequest filter) {
         return filter.getStatus() == null
                 && filter.getFromDate() == null
                 && filter.getToDate() == null;
     }
 
-    private LocalDateTime toStartOfDay(LocalDateTime dt) {
-        return dt;
-    }
-
-    private LocalDateTime toEndOfDay(LocalDateTime dt) {
-        return dt;
-    }
+    private LocalDateTime toStartOfDay(LocalDateTime dt) { return dt; }
+    private LocalDateTime toEndOfDay(LocalDateTime dt)   { return dt; }
 }

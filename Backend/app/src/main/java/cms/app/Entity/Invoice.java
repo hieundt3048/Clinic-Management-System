@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 // Hóa đơn thanh toán sau khi khám bệnh, liên kết với lịch hẹn và bệnh nhân
@@ -41,6 +42,11 @@ public class Invoice {
 
     public enum PaymentStatus {
     UNPAID, PAID
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
     @Column(columnDefinition = "NVARCHAR(50)")

@@ -82,4 +82,10 @@ public class InvoiceController {
         InvoiceResponse data = invoiceService.payInvoice(userDetails.getUsername(), invoiceId, request);
         return ResponseEntity.ok(ApiResponse.success("Thanh toán thành công", data));
     }
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<InvoiceResponse>>> getAllInvoices() {
+        List<InvoiceResponse> data = invoiceService.getAllInvoices();
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách hóa đơn thành công", data));
+    }
 }

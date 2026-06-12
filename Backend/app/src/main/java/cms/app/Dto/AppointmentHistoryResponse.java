@@ -16,6 +16,7 @@ public class AppointmentHistoryResponse {
     // Thông tin bệnh nhân
     private Integer patientId;
     private String patientName;
+    private String patientPhone;
 
     // Thông tin bác sĩ
     private Integer doctorId;
@@ -26,6 +27,12 @@ public class AppointmentHistoryResponse {
     private Integer specialtyId;
     private String specialtyName;
 
+    // Dịch vụ khám
+    private Integer serviceId;
+    private String serviceName;
+    private Double servicePrice;
+
+
     // ==================== Constructors ====================
 
     public AppointmentHistoryResponse() {}
@@ -33,9 +40,10 @@ public class AppointmentHistoryResponse {
     public AppointmentHistoryResponse(
             Integer appointmentId, LocalDateTime appointmentDate,
             AppointmentStatus status, String reason, Boolean followUp,
-            Integer patientId, String patientName,
+            Integer patientId, String patientName, String patientPhone,
             Integer doctorId, String doctorName, String roomNumber,
-            Integer specialtyId, String specialtyName) {
+            Integer specialtyId, String specialtyName,
+            Integer serviceId, String serviceName, Double servicePrice) {
         this.appointmentId = appointmentId;
         this.appointmentDate = appointmentDate;
         this.status = status;
@@ -48,6 +56,10 @@ public class AppointmentHistoryResponse {
         this.roomNumber = roomNumber;
         this.specialtyId = specialtyId;
         this.specialtyName = specialtyName;
+        this.patientPhone = patientPhone;
+        this.serviceId       = serviceId;
+        this.serviceName     = serviceName;
+        this.servicePrice    = servicePrice;
     }
 
     // ==================== Getters & Setters ====================
@@ -73,6 +85,9 @@ public class AppointmentHistoryResponse {
     public String getPatientName() { return patientName; }
     public void setPatientName(String patientName) { this.patientName = patientName; }
 
+    public String getPatientPhone() { return patientPhone; }
+    public void setPatientPhone(String patientPhone) { this.patientPhone = patientPhone; }
+
     public Integer getDoctorId() { return doctorId; }
     public void setDoctorId(Integer doctorId) { this.doctorId = doctorId; }
 
@@ -87,4 +102,14 @@ public class AppointmentHistoryResponse {
 
     public String getSpecialtyName() { return specialtyName; }
     public void setSpecialtyName(String specialtyName) { this.specialtyName = specialtyName; }
+
+    public Integer getServiceId() { return serviceId; }
+    public void setServiceId(Integer serviceId) { this.serviceId = serviceId; }
+
+    public String getServiceName() { return serviceName; }
+    public void setServiceName(String serviceName) { this.serviceName = serviceName; }
+
+    public Double getServicePrice() { return servicePrice; }
+    public void setServicePrice(Double servicePrice) { this.servicePrice = servicePrice; }
+
 }

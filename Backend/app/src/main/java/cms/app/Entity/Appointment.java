@@ -35,6 +35,11 @@ public class Appointment {
     @JoinColumn(name = "specialty_id", nullable = false)
     private Specialty specialty;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_id", nullable = true)
+    private ServiceCatalog service;
+
     @Column(nullable = false)
     private LocalDateTime appointmentDate;
 
@@ -59,6 +64,10 @@ public class Appointment {
     public void setAppointmentId(Integer appointmentId) {
         this.appointmentId = appointmentId;
     }
+
+    public ServiceCatalog getService() { return service; }
+    public void setService(ServiceCatalog service) { this.service = service; }
+
 
     public Patient getPatient() {
         return patient;

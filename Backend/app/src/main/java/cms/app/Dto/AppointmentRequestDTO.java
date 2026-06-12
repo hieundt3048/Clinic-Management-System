@@ -5,6 +5,7 @@ public class AppointmentRequestDTO {
     private Integer doctorId;
     private Integer specialtyId;
     private Integer patientId;
+    private Integer serviceId; 
     private LocalDateTime appointmentDate;
     private String reason;
     private Boolean followUp = false;
@@ -23,6 +24,13 @@ public class AppointmentRequestDTO {
 
     public void setSpecialtyId(Integer specialtyId) {
         this.specialtyId = specialtyId;
+    }
+
+    public Integer getServiceId() { 
+        return serviceId; 
+    }
+    public void setServiceId(Integer serviceId) { 
+        this.serviceId = serviceId; 
     }
 
     public Integer getPatientId() {

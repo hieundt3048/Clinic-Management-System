@@ -22,6 +22,7 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.patient p
+        JOIN FETCH p.user u
         JOIN FETCH a.doctor d
         JOIN FETCH d.specialty s
         WHERE p.patientId = :patientId
@@ -32,6 +33,7 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.patient p
+        JOIN FETCH p.user u
         JOIN FETCH a.doctor d
         JOIN FETCH d.specialty s
         WHERE p.patientId = :patientId
@@ -51,6 +53,7 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.patient p
+        JOIN FETCH p.user u
         JOIN FETCH a.doctor d
         JOIN FETCH d.specialty s
         WHERE d.doctorId = :doctorId
@@ -61,6 +64,7 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.patient p
+        JOIN FETCH p.user u
         JOIN FETCH a.doctor d
         JOIN FETCH d.specialty s
         WHERE d.doctorId = :doctorId
@@ -80,6 +84,7 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.patient p
+        JOIN FETCH p.user u
         JOIN FETCH a.doctor d
         JOIN FETCH d.specialty s
         WHERE (:status IS NULL OR a.status = :status)
@@ -97,6 +102,7 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.patient p
+        JOIN FETCH p.user u
         JOIN FETCH a.doctor d
         JOIN FETCH d.specialty s
         WHERE p.patientId = :patientId
@@ -115,6 +121,7 @@ public interface AppointmentHistoryRepository extends JpaRepository<Appointment,
     @Query("""
         SELECT a FROM Appointment a
         JOIN FETCH a.patient p
+        JOIN FETCH p.user u
         JOIN FETCH a.doctor d
         JOIN FETCH d.specialty s
         WHERE a.isFollowUp = true

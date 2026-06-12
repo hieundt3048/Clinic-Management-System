@@ -24,76 +24,72 @@ public class RevenueReportService implements IRevenueReportService {
         this.reportRepo = reportRepo;
     }
 
-    // Báo cáo theo ngày
+    // ── Helper: SQL Server trả Double hoặc BigDecimal tuỳ query → normalize về BigDecimal ──
+    private BigDecimal toBigDecimal(Object value) {
+        if (value == null)                    return BigDecimal.ZERO;
+        if (value instanceof BigDecimal)      return (BigDecimal) value;
+        if (value instanceof Double)          return BigDecimal.valueOf((Double) value);
+        if (value instanceof Float)           return BigDecimal.valueOf(((Float) value).doubleValue());
+        if (value instanceof Long)            return BigDecimal.valueOf((Long) value);
+        if (value instanceof Integer)         return BigDecimal.valueOf((Integer) value);
+        return new BigDecimal(value.toString());
+    }
+
+    private int toInt(Object value) {
+        if (value == null)               return 0;
+        if (value instanceof Long)       return ((Long) value).intValue();
+        if (value instanceof Integer)    return (Integer) value;
+        if (value instanceof BigDecimal) return ((BigDecimal) value).intValue();
+        return Integer.parseInt(value.toString());
+    }
+
     @Override
     public RevenueReportResponse getReportByDay(LocalDate date) {
         LocalDateTime from = date.atStartOfDay();
         LocalDateTime to   = date.atTime(LocalTime.MAX);
-
-        String label = date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        return buildReport("DAY", label, from, to);
+        return buildReport("DAY",
+                date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                from, to);
     }
 
-    // Báo cáo theo tuần
     @Override
     public RevenueReportResponse getReportByWeek(LocalDate anyDayInWeek) {
-        // ISO week: thứ Hai → Chủ nhật
         LocalDate monday = anyDayInWeek.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate sunday = monday.plusDays(6);
-
-        LocalDateTime from = monday.atStartOfDay();
-        LocalDateTime to   = sunday.atTime(LocalTime.MAX);
-
         int week = anyDayInWeek.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         String label = String.format("Tuần %d/%d (%s - %s)",
                 week, anyDayInWeek.getYear(),
                 monday.format(DateTimeFormatter.ofPattern("dd/MM")),
                 sunday.format(DateTimeFormatter.ofPattern("dd/MM")));
-
-        return buildReport("WEEK", label, from, to);
+        return buildReport("WEEK", label, monday.atStartOfDay(), sunday.atTime(LocalTime.MAX));
     }
 
-    // Báo cáo theo tháng───
     @Override
     public RevenueReportResponse getReportByMonth(int year, int month) {
         LocalDate firstDay = LocalDate.of(year, month, 1);
         LocalDate lastDay  = firstDay.with(TemporalAdjusters.lastDayOfMonth());
-
-        LocalDateTime from = firstDay.atStartOfDay();
-        LocalDateTime to   = lastDay.atTime(LocalTime.MAX);
-
-        String label = String.format("Tháng %d/%d", month, year);
-        return buildReport("MONTH", label, from, to);
+        return buildReport("MONTH",
+                String.format("Tháng %d/%d", month, year),
+                firstDay.atStartOfDay(), lastDay.atTime(LocalTime.MAX));
     }
 
-    // Báo cáo theo năm
     @Override
     public RevenueReportResponse getReportByYear(int year) {
-        LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
-        LocalDateTime to   = LocalDate.of(year, 12, 31).atTime(LocalTime.MAX);
-
-        String label = "Năm " + year;
-        return buildReport("YEAR", label, from, to);
+        return buildReport("YEAR", "Năm " + year,
+                LocalDate.of(year, 1, 1).atStartOfDay(),
+                LocalDate.of(year, 12, 31).atTime(LocalTime.MAX));
     }
 
-    // Báo cáo theo khoảng tuỳ chỉnh
     @Override
     public RevenueReportResponse getReportByRange(LocalDate from, LocalDate to) {
-        if (to.isBefore(from)) {
+        if (to.isBefore(from))
             throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
-        }
-
-        LocalDateTime fromDt = from.atStartOfDay();
-        LocalDateTime toDt   = to.atTime(LocalTime.MAX);
-
         String label = String.format("%s → %s",
                 from.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 to.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-
-        return buildReport("RANGE", label, fromDt, toDt);
+        return buildReport("RANGE", label, from.atStartOfDay(), to.atTime(LocalTime.MAX));
     }
 
-    // Core builder — dùng chung cho tất cả kỳ
     private RevenueReportResponse buildReport(String period, String label,
                                                LocalDateTime from, LocalDateTime to) {
         RevenueReportResponse report = new RevenueReportResponse();
@@ -101,9 +97,10 @@ public class RevenueReportService implements IRevenueReportService {
         report.setPeriodLabel(label);
 
         // ── Tổng quan ──
-        BigDecimal totalRevenue  = reportRepo.sumRevenue(from, to);
-        int paidCount            = reportRepo.countPaidInvoices(from, to);
-        int unpaidCount          = reportRepo.countUnpaidInvoices(from, to);
+        // sumRevenue có thể trả null (chưa có hóa đơn nào), Double hoặc BigDecimal
+        BigDecimal totalRevenue = toBigDecimal(reportRepo.sumRevenue(from, to));
+        int paidCount   = reportRepo.countPaidInvoices(from, to);
+        int unpaidCount = reportRepo.countUnpaidInvoices(from, to);
 
         report.setTotalRevenue(totalRevenue);
         report.setTotalInvoicesPaid(paidCount);
@@ -118,11 +115,11 @@ public class RevenueReportService implements IRevenueReportService {
         List<DoctorRevenueDto> byDoctor = reportRepo.revenueByDoctor(from, to)
                 .stream()
                 .map(row -> new DoctorRevenueDto(
-                        (Integer)   row[0],
-                        (String)    row[1],
-                        (String)    row[2],
-                        (BigDecimal)row[3],
-                        ((Long)     row[4]).intValue()
+                        (Integer)        row[0],
+                        (String)         row[1],
+                        (String)         row[2],
+                        toBigDecimal(    row[3]),   // ← dùng helper thay vì cast trực tiếp
+                        toInt(           row[4])
                 ))
                 .collect(Collectors.toList());
         report.setRevenueByDoctor(byDoctor);
@@ -131,10 +128,10 @@ public class RevenueReportService implements IRevenueReportService {
         List<SpecialtyRevenueDto> bySpecialty = reportRepo.revenueBySpecialty(from, to)
                 .stream()
                 .map(row -> new SpecialtyRevenueDto(
-                        (Integer)   row[0],
-                        (String)    row[1],
-                        (BigDecimal)row[2],
-                        ((Long)     row[3]).intValue()
+                        (Integer)        row[0],
+                        (String)         row[1],
+                        toBigDecimal(    row[2]),
+                        toInt(           row[3])
                 ))
                 .collect(Collectors.toList());
         report.setRevenueBySpecialty(bySpecialty);
@@ -144,8 +141,8 @@ public class RevenueReportService implements IRevenueReportService {
                 .stream()
                 .map(row -> new DailyRevenueDto(
                         ((java.sql.Date) row[0]).toLocalDate(),
-                        (BigDecimal)     row[1],
-                        ((Long)          row[2]).intValue()
+                        toBigDecimal(    row[1]),
+                        toInt(           row[2])
                 ))
                 .collect(Collectors.toList());
         report.setRevenueByDate(byDate);

@@ -17,4 +17,6 @@ public interface IInvoiceService {
     InvoiceResponse getInvoice(String userEmail, Iterable<? extends GrantedAuthority> authorities, Integer invoiceId);
 
     InvoiceResponse payInvoice(String patientUserEmail, Integer invoiceId, PayInvoiceRequest request);
+
+    List<InvoiceResponse> getAllInvoices();
 }
