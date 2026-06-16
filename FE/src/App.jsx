@@ -12,45 +12,59 @@ import NotFoundPage from './pages/NotFoundPage';
 import MedicalHistory from './pages/MedicalHistory';
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
-import AdminDashboard from './components/AdminDashboard';
-import DoctorDashboard from './components/DoctorDashboard';
-import { clearAuth } from './services/api';
-import BillingPage from './pages/BillingPage';
-import AdminRevenuePage     from './pages/admin/AdminRevenuePage';
+import AdminRevenuePage      from './pages/admin/AdminRevenuePage';
 import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage';
-import AdminInvoicesPage    from './pages/admin/AdminInvoicesPage';
-import AdminStaffPage       from './pages/admin/AdminStaffPage';
+import AdminInvoicesPage     from './pages/admin/AdminInvoicesPage';
+import AdminStaffPage        from './pages/admin/AdminStaffPage';
+import DoctorAppointmentsPage  from './pages/doctor/DoctorAppointmentsPage';
+import DoctorPrescriptionsPage from './pages/doctor/DoctorPrescriptionsPage';
+import DoctorPatientsPage      from './pages/doctor/DoctorPatientsPage';
+import BillingPage from './pages/BillingPage';
+import { clearAuth } from './services/api';
 import './App.css';
 
-// Các trang KHÔNG hiện sidebar
 const NO_SIDEBAR_PATHS = ['/login', '/register'];
 
-
-
-const Layout = ({ user, children }) => {
+const Layout = ({ user, loading, children }) => {
   const location = useLocation();
+  const isAdminPath  = location.pathname.startsWith('/admin');
+  const isDoctorPath = location.pathname.startsWith('/doctor');
+  const hideSidebar  = NO_SIDEBAR_PATHS.includes(location.pathname)
+                    || !user
+                    || isAdminPath
+                    || isDoctorPath;
 
-  const isAdminPath = location.pathname.startsWith('/admin');
-  
-  const hideSidebar = NO_SIDEBAR_PATHS.includes(location.pathname) || !user || isAdminPath;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] bg-gray-50">
       {!hideSidebar && <Sidebar />}
-      <main className="flex-grow">
-        {children}
-      </main>
+      <main className="flex-grow">{children}</main>
     </div>
   );
 };
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -62,37 +76,49 @@ function App() {
   return (
     <Router>
       <Header user={user} onLogout={handleLogout} />
-      <Layout user={user}>
-        <Suspense fallback={<div>Loading...</div>}>
+      <Layout user={user} loading={loading}>
+        <Suspense fallback={<div className="flex justify-center py-10"><div className="animate-spin h-6 w-6 border-b-2 border-blue-500 rounded-full" /></div>}>
           <Routes>
-            <Route path="/login" element={<Login onLogin={setUser} />} />
+            <Route path="/login"    element={<Login onLogin={setUser} />} />
             <Route path="/register" element={<Register />} />
 
-            {user ? (
-              <>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/admin"              element={<AdminRevenuePage />} />
-                <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
-                <Route path="/admin/invoices"     element={<AdminInvoicesPage />} />
-                <Route path="/admin/staff"        element={<AdminStaffPage />} />
-                <Route path="/doctor" element={<DoctorDashboard />} />
-                {user.role === 'PATIENT' ? (
-                  <>
-                    <Route path="/appointments" element={<AppointmentPage />} />
-                    <Route path="/appointment-history" element={<AppointmentHistoryPage />} />
-                    <Route path="/health-profile" element={<HealthProfilePage />} />
-                    <Route path="/medication-reminder" element={<MedicationReminderPage />} />
-                    <Route path="/medical-history" element={<MedicalHistory />} />
-                    <Route path="/billing" element={<BillingPage />} />
-                  </>
-                ) : null}
-                <Route path="/user-profile" element={<UserProfilePage />} />
-              </>
-            ) : (
-              <Route path="/*" element={<Navigate to="/login" />} />
-            )}
+            {!loading && (
+              user ? (
+                <>
+                  <Route path="/"               element={<HomePage />} />
+                  <Route path="/user-profile"   element={<UserProfilePage />} />
+                  <Route path="/billing"        element={<BillingPage />} />
 
-            <Route path="*" element={<NotFoundPage />} />
+                  {/* Admin */}
+                  <Route path="/admin"              element={<AdminRevenuePage />} />
+                  <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
+                  <Route path="/admin/invoices"     element={<AdminInvoicesPage />} />
+                  <Route path="/admin/staff"        element={<AdminStaffPage />} />
+
+                  {/* Doctor */}
+                  <Route path="/doctor"               element={<DoctorAppointmentsPage />} />
+                  <Route path="/doctor/prescriptions" element={<DoctorPrescriptionsPage />} />
+                  <Route path="/doctor/patients"      element={<DoctorPatientsPage />} />
+
+                  {/* Patient */}
+                  {user.role === 'PATIENT' && (
+                    <>
+                      <Route path="/appointments"       element={<AppointmentPage />} />
+                      <Route path="/appointment-history" element={<AppointmentHistoryPage />} />
+                      <Route path="/health-profile"     element={<HealthProfilePage />} />
+                      <Route path="/medication-reminder" element={<MedicationReminderPage />} />
+                      <Route path="/medical-history"    element={<MedicalHistory />} />
+                      <Route path="/profile" element={<UserProfilePage />} />
+                    </>
+                  )}
+
+                  <Route path="*" element={<NotFoundPage />} />
+                </>
+              ) : (
+                // Chưa đăng nhập → redirect về login
+                <Route path="*" element={<Navigate to="/login" replace />} />
+              )
+            )}
           </Routes>
         </Suspense>
       </Layout>

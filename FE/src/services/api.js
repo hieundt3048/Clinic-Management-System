@@ -144,15 +144,6 @@ export const getSpecialties = () =>
 export const getDoctorsBySpecialty = (specialtyId) =>
   apiClient.get('/catalog/doctors', { params: { specialtyId } }).then((r) => r.data.data);
 
-export const getAllDoctors = async () => {
-  const specialties = await getSpecialties();
-  const results = await Promise.allSettled(
-    specialties.map((s) => getDoctorsBySpecialty(s.specialtyId))
-  );
-  return results
-    .filter((r) => r.status === 'fulfilled')
-    .flatMap((r) => r.value || []);
-};
 
 export const getAllAppointments = () =>
   apiClient.get('/appointments/history').then((r) => r.data);
@@ -165,3 +156,32 @@ export const adminCreateInvoice = (payload) =>
 
 export const createStaff = (payload, role = 'DOCTOR') =>
   apiClient.post('/auth/create-staff', payload, { params: { role } }).then((r) => r.data);
+
+export const getAllDoctors = () =>
+  apiClient.get('/doctors').then((r) =>
+    Array.isArray(r.data) ? r.data : r.data?.data || []
+  );
+ 
+// PUT /api/doctors/{id}
+export const updateDoctor = (id, payload) =>
+  apiClient.put(`/doctors/${id}`, payload).then((r) => r.data?.data || r.data);
+ 
+// PATCH /api/doctors/{id}/status?active=true|false
+export const toggleDoctorStatus = (id, active) =>
+  apiClient.patch(`/doctors/${id}/status`, null, { params: { active } }).then((r) => r.data);
+ 
+// DELETE /api/doctors/{id}
+export const deleteDoctor = (id) =>
+  apiClient.delete(`/doctors/${id}`).then((r) => r.data);
+
+// GET /api/appointments/history/doctor/{doctorId}
+export const getDoctorAppointments = (doctorId) =>
+  apiClient.get(`/appointments/history/doctor/${doctorId}`).then((r) => r.data);
+ 
+// POST /api/prescriptions
+export const createPrescription = (payload) =>
+  apiClient.post('/prescriptions', payload).then((r) => r.data);
+ 
+// GET /api/health-metrics/{patientId}
+export const getPatientHealthMetrics = (patientId) =>
+  apiClient.get(`/health-metrics/${patientId}`).then((r) => r.data);

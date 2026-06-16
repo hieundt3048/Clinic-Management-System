@@ -34,33 +34,41 @@ const StatusBadge = ({ status }) => {
 // ─── Status transitions ───────────────────────────────────────────────────────
 // Các bước chuyển trạng thái hợp lệ
 const NEXT_STATUS = {
-  PENDING:   { value: 'CONFIRMED', label: 'Xác nhận',   color: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
-  CONFIRMED: { value: 'COMPLETED', label: 'Hoàn thành', color: 'text-green-600 border-green-200 hover:bg-green-50' },
+  PENDING: { value: 'CONFIRMED', label: 'Xác nhận', color: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
 };
 
 // ─── Invoice Modal ─────────────────────────────────────────────────────────────
 
 const InvoiceModal = ({ appt, services, onCreated, onClose }) => {
-  // Tự động tìm giá dịch vụ mặc định (khám chuyên khoa tiêu chuẩn)
-  const defaultService = services.find(s =>
-    s.serviceName?.toLowerCase().includes('tiêu chuẩn') ||
-    s.serviceName?.toLowerCase().includes('chuyên khoa')
-  ) || services[0];
+  // Ưu tiên dùng dịch vụ BN đã đăng ký (từ BE), fallback về catalog
+  const preselectedId = appt.serviceId
+    || services.find(s =>
+        s.serviceName?.toLowerCase().includes('tiêu chuẩn') ||
+        s.serviceName?.toLowerCase().includes('chuyên khoa')
+      )?.serviceId
+    || services[0]?.serviceId
+    || '';
 
-  const [selectedServiceId, setSelectedServiceId] = useState(defaultService?.serviceId || '');
+  const [selectedServiceId, setSelectedServiceId] = useState(preselectedId);
   const [customAmount, setCustomAmount] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // Nếu BE đã trả servicePrice → dùng luôn, không cần chọn lại
+  const presetPrice = appt.servicePrice || null;
   const selectedService = services.find(s => s.serviceId === Number(selectedServiceId));
-  const finalAmount = customAmount ? Number(customAmount) : (selectedService?.basePrice || 0);
+  const finalAmount = customAmount
+    ? Number(customAmount)
+    : (presetPrice || selectedService?.basePrice || 0);
 
   const handleSubmit = async () => {
     if (!finalAmount || finalAmount <= 0) { setError('Vui lòng chọn dịch vụ hoặc nhập số tiền'); return; }
     setSaving(true); setError('');
     try {
       await adminCreateInvoice({ appointmentId: appt.appointmentId, totalAmount: finalAmount });
-      onCreated();
+      // Tự động đánh dấu COMPLETED sau khi tạo HĐ
+      try { await updateAppointmentStatus(appt.appointmentId, 'COMPLETED'); } catch(_) {}
+      onCreated('COMPLETED');
     } catch (e) {
       setError(e.response?.data?.message || 'Tạo hóa đơn thất bại.');
     } finally { setSaving(false); }
@@ -209,7 +217,7 @@ const AppointmentRow = ({ appt, onStatusChange, onCreateInvoice, updating }) => 
               </button>
             )}
             {/* Nút tạo HĐ */}
-            {appt.status === 'COMPLETED' && (
+            {(appt.status === 'CONFIRMED' || appt.status === 'COMPLETED') && (
               <button
                 onClick={() => onCreateInvoice(appt)}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition"
@@ -430,29 +438,23 @@ const AdminAppointmentsPage = () => {
             </div>
           </div>
         )}
-
-        {/* BE note */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 space-y-1">
-          <p className="font-semibold">⚠️ Cần bổ sung BE để nút "Xác nhận" / "Hoàn thành" hoạt động:</p>
-          <p>Thêm endpoint vào <code className="bg-amber-100 px-1 rounded">AppointmentController.java</code>:</p>
-          <pre className="bg-amber-100 rounded p-2 mt-1 overflow-x-auto font-mono text-xs">{`@PatchMapping("/{id}/status")
-@PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<ApiResponse<String>> updateStatus(
-    @PathVariable Integer id,
-    @RequestParam String status) {
-  appointmentService.updateStatus(id,
-    Appointment.AppointmentStatus.valueOf(status));
-  return ResponseEntity.ok(
-    new ApiResponse<>(true, "Cập nhật thành công", null));
-}`}</pre>
-        </div>
       </div>
 
       {invoiceTarget && (
         <InvoiceModal
           appt={invoiceTarget}
           services={services}
-          onCreated={() => { setInvoiceTarget(null); showToast('Tạo hóa đơn thành công!'); }}
+          onCreated={(newStatus) => {
+            if (newStatus) {
+              setAppointments(prev => prev.map(a =>
+                a.appointmentId === invoiceTarget.appointmentId
+                  ? { ...a, status: newStatus }
+                  : a
+              ));
+            }
+            setInvoiceTarget(null);
+            showToast('Tạo hóa đơn thành công!');
+          }}
           onClose={() => setInvoiceTarget(null)}
         />
       )}
