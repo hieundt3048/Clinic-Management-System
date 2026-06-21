@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AdminLayout from './AdminLayout';
-import { adminGetAllInvoices } from '../../services/api';
+import { adminGetAllInvoices, confirmCashPayment } from '../../services/api';
 import {
   MagnifyingGlassIcon, FunnelIcon, ArrowPathIcon, ExclamationCircleIcon,
   CalendarDaysIcon, CheckCircleIcon, ClockIcon, DocumentTextIcon,
@@ -11,8 +11,9 @@ const fmtDate = (s) => s ? new Date(s).toLocaleDateString('vi-VN', { day:'2-digi
 const fmtDateTime = (s) => s ? new Date(s).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
 
 const STATUS_CFG = {
-  UNPAID: { label:'Chưa thanh toán', color:'bg-orange-100 text-orange-700 border-orange-200', dot:'bg-orange-400' },
-  PAID:   { label:'Đã thanh toán',   color:'bg-green-100 text-green-700 border-green-200',   dot:'bg-green-500' },
+  UNPAID:       { label:'Chưa thanh toán',        color:'bg-orange-100 text-orange-700 border-orange-200', dot:'bg-orange-400' },
+  PENDING_CASH: { label:'Chờ xác nhận tại quầy',  color:'bg-yellow-100 text-yellow-700 border-yellow-200', dot:'bg-yellow-400' },
+  PAID:         { label:'Đã thanh toán',           color:'bg-green-100 text-green-700 border-green-200',   dot:'bg-green-500' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -27,9 +28,10 @@ const StatusBadge = ({ status }) => {
 const PAYMENT_LABEL = { CASH:'Tiền mặt', BANK_TRANSFER:'Chuyển khoản', CARD:'Thẻ' };
 
 const FILTER_OPTIONS = [
-  { value: '', label: 'Tất cả' },
-  { value: 'UNPAID', label: 'Chưa thanh toán' },
-  { value: 'PAID', label: 'Đã thanh toán' },
+  { value: '',             label: 'Tất cả' },
+  { value: 'UNPAID',       label: 'Chưa thanh toán' },
+  { value: 'PENDING_CASH', label: 'Chờ xác nhận tại quầy' },
+  { value: 'PAID',         label: 'Đã thanh toán' },
 ];
 
 const AdminInvoicesPage = () => {
@@ -38,6 +40,7 @@ const AdminInvoicesPage = () => {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [confirming, setConfirming] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -52,6 +55,18 @@ const AdminInvoicesPage = () => {
     };
     load();
   }, []);
+
+  const handleConfirmCash = async (invoiceId) => {
+    if (!window.confirm('Xác nhận bệnh nhân đã nộp tiền mặt tại quầy?')) return;
+    setConfirming(invoiceId);
+    try {
+      // PATCH /api/invoices/{id}/confirm-cash
+      const updated = await confirmCashPayment(invoiceId);
+      setInvoices(prev => prev.map(i => i.invoiceId === invoiceId ? updated : i));
+    } catch (e) {
+      alert(e.response?.data?.message || 'Duyệt thất bại.');
+    } finally { setConfirming(null); }
+  };
 
   const filtered = useMemo(() => {
     return invoices.filter(inv => {
@@ -135,6 +150,7 @@ const AdminInvoicesPage = () => {
                     <th className="px-4 py-3 font-semibold">Trạng thái</th>
                     <th className="px-4 py-3 font-semibold">PT thanh toán</th>
                     <th className="px-4 py-3 font-semibold">Thanh toán lúc</th>
+                    <th className="px-4 py-3 font-semibold">Duyệt</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -162,10 +178,28 @@ const AdminInvoicesPage = () => {
                           <span className="flex items-center gap-1 text-green-600">
                             <CheckCircleIcon className="h-3.5 w-3.5" />{fmtDateTime(inv.paidAt)}
                           </span>
+                        ) : inv.status === 'PENDING_CASH' ? (
+                          <span className="flex items-center gap-1 text-yellow-600">
+                            <ClockIcon className="h-3.5 w-3.5" />Chờ tại quầy
+                          </span>
                         ) : (
                           <span className="flex items-center gap-1 text-orange-400">
                             <ClockIcon className="h-3.5 w-3.5" />Chờ thanh toán
                           </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {inv.status === 'PENDING_CASH' && (
+                          <button
+                            onClick={() => handleConfirmCash(inv.invoiceId)}
+                            disabled={confirming === inv.invoiceId}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-green-600 border border-green-200 rounded-lg hover:bg-green-50 transition disabled:opacity-50"
+                          >
+                            {confirming === inv.invoiceId
+                              ? <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
+                              : <CheckCircleIcon className="h-3.5 w-3.5" />}
+                            Duyệt
+                          </button>
                         )}
                       </td>
                     </tr>

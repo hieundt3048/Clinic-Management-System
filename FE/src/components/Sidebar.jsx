@@ -7,9 +7,7 @@ import {
   ClipboardDocumentListIcon,
   DocumentTextIcon,
   BeakerIcon,
-  PhotoIcon,
   CurrencyDollarIcon,
-  BellIcon,
   QuestionMarkCircleIcon,
   ChevronDownIcon,
   ClockIcon,
@@ -19,19 +17,17 @@ const appointmentSubItems = [
   { name: 'Đặt lịch khám', href: '/appointments', icon: CalendarIcon },
   { name: 'Lịch sử đặt khám', href: '/appointment-history', icon: ClockIcon },
   { name: 'Hồ sơ sức khỏe', href: '/health-profile', icon: UserCircleIcon },
-  { name: 'Nhắc uống thuốc', href: '/medication-reminder', icon: BellIcon },
-  { name: 'Lịch sử bệnh án', href: '/medical-history', icon: ClipboardDocumentListIcon },
+  { name: 'Nhắc uống thuốc', href: '/medication-reminder', icon: BeakerIcon },
 ];
 
 const navigation = [
   { name: 'Tổng quan', href: '/', icon: HomeIcon },
-  { name: 'Hồ sơ cá nhân', href: '/profile', icon: UserCircleIcon },
+  { name: 'Hồ sơ cá nhân', href: '/user-profile', icon: UserCircleIcon },
   { name: 'Lịch hẹn khám', href: null, icon: CalendarIcon, hasDropdown: true },
+  { name: 'Lịch sử bệnh án', href: '/medical-history', icon: ClipboardDocumentListIcon },
   { name: 'Đơn thuốc', href: '/prescriptions', icon: DocumentTextIcon },
   { name: 'Kết quả xét nghiệm', href: '/test-results', icon: BeakerIcon },
-  { name: 'Hình ảnh y tế', href: '/medical-images', icon: PhotoIcon },
   { name: 'Hóa đơn & Thanh toán', href: '/billing', icon: CurrencyDollarIcon },
-  { name: 'Thông báo', href: '/notifications', icon: BellIcon },
 ];
 
 const appointmentPaths = appointmentSubItems.map(i => i.href);
@@ -77,7 +73,6 @@ const Sidebar = () => {
                     />
                   </button>
 
-                  {/* Dropdown */}
                   <div
                     onMouseEnter={() => setDropdownOpen(true)}
                     onMouseLeave={() => setDropdownOpen(false)}

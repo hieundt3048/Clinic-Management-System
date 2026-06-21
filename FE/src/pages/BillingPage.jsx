@@ -58,8 +58,9 @@ const formatDate = (str) => {
 // ─── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS = {
-  UNPAID: { label: 'Chưa thanh toán', color: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400' },
-  PAID:   { label: 'Đã thanh toán',   color: 'bg-green-100 text-green-700 border-green-200',   dot: 'bg-green-500'  },
+  UNPAID:       { label: 'Chưa thanh toán',          color: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400' },
+  PENDING_CASH: { label: 'Chờ xác nhận tại quầy',    color: 'bg-yellow-100 text-yellow-700 border-yellow-200', dot: 'bg-yellow-400' },
+  PAID:         { label: 'Đã thanh toán',             color: 'bg-green-100 text-green-700 border-green-200',   dot: 'bg-green-500'  },
 };
 const getStatus = (key) => STATUS[key] || STATUS.UNPAID;
 
@@ -98,7 +99,7 @@ const CopyButton = ({ text }) => {
 // ─── PayModal ─────────────────────────────────────────────────────────────────
 
 const PayModal = ({ invoice, onPaid, onClose }) => {
-  const [step, setStep] = useState('choose');
+  const [step, setStep] = useState('choose');   // 'choose' | 'cash' | 'transfer' | 'success'
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState('');
 
@@ -319,7 +320,7 @@ const PayModal = ({ invoice, onPaid, onClose }) => {
 
           {/* Lưu ý */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-xs text-yellow-800 space-y-1">
-            <p className="font-semibold">⚠️ Lưu ý quan trọng:</p>
+            <p className="font-semibold">Lưu ý quan trọng:</p>
             <p>Nhập <span className="font-semibold">đúng nội dung chuyển khoản</span> để hệ thống tự động xác nhận thanh toán của bạn.</p>
           </div>
 
@@ -370,14 +371,14 @@ const PayModal = ({ invoice, onPaid, onClose }) => {
 
 const InvoiceCard = ({ invoice, onPay }) => (
   <div className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
-    invoice.status === 'UNPAID' ? 'border-orange-100' : 'border-gray-200'
+    invoice.status === 'UNPAID' ? 'border-orange-100' : invoice.status === 'PENDING_CASH' ? 'border-yellow-100' : 'border-gray-200'
   }`}>
-    <div className={`h-1 ${invoice.status === 'UNPAID' ? 'bg-gradient-to-r from-orange-400 to-orange-300' : 'bg-gradient-to-r from-green-400 to-green-300'}`} />
+    <div className={`h-1 ${invoice.status === 'UNPAID' ? 'bg-gradient-to-r from-orange-400 to-orange-300' : invoice.status === 'PENDING_CASH' ? 'bg-gradient-to-r from-yellow-400 to-yellow-300' : 'bg-gradient-to-r from-green-400 to-green-300'}`} />
     <div className="p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-4 min-w-0">
-          <div className={`p-2.5 rounded-xl shrink-0 ${invoice.status === 'UNPAID' ? 'bg-orange-100' : 'bg-green-100'}`}>
-            <DocumentTextIcon className={`h-5 w-5 ${invoice.status === 'UNPAID' ? 'text-orange-600' : 'text-green-600'}`} />
+          <div className={`p-2.5 rounded-xl shrink-0 ${invoice.status === 'UNPAID' ? 'bg-orange-100' : invoice.status === 'PENDING_CASH' ? 'bg-yellow-100' : 'bg-green-100'}`}>
+            <DocumentTextIcon className={`h-5 w-5 ${invoice.status === 'UNPAID' ? 'text-orange-600' : invoice.status === 'PENDING_CASH' ? 'text-yellow-700' : 'text-green-600'}`} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -402,15 +403,21 @@ const InvoiceCard = ({ invoice, onPay }) => (
                   · {invoice.paymentMethod === 'CASH' ? 'Tiền mặt' : invoice.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản' : invoice.paymentMethod}
                 </span>
               )}
+              {invoice.status === 'PENDING_CASH' && (
+                <span className="flex items-center gap-1 text-yellow-600">
+                  <ClockIcon className="h-3.5 w-3.5" />
+                  Vui lòng đến quầy thu ngân để hoàn tất
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col items-end gap-2 shrink-0">
-          <p className={`text-xl font-bold ${invoice.status === 'UNPAID' ? 'text-orange-600' : 'text-green-600'}`}>
+          <p className={`text-xl font-bold ${invoice.status === 'UNPAID' ? 'text-orange-600' : invoice.status === 'PENDING_CASH' ? 'text-yellow-700' : 'text-green-600'}`}>
             {formatCurrency(invoice.totalAmount)}
           </p>
-          {invoice.status === 'UNPAID' && (
+          {(invoice.status === 'UNPAID') && (
             <button
               onClick={() => onPay(invoice)}
               className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition"
@@ -429,8 +436,9 @@ const InvoiceCard = ({ invoice, onPay }) => (
 
 const FILTER_OPTIONS = [
   { value: '', label: 'Tất cả' },
-  { value: 'UNPAID', label: 'Chưa thanh toán' },
-  { value: 'PAID', label: 'Đã thanh toán' },
+  { value: 'UNPAID',       label: 'Chưa thanh toán' },
+  { value: 'PENDING_CASH', label: 'Chờ xác nhận tại quầy' },
+  { value: 'PAID',         label: 'Đã thanh toán' },
 ];
 
 const BillingPage = () => {
@@ -482,10 +490,11 @@ const BillingPage = () => {
   const stats = useMemo(() => ({
     total:         invoices.length,
     unpaid:        invoices.filter(i => i.status === 'UNPAID').length,
+    pendingCash:   invoices.filter(i => i.status === 'PENDING_CASH').length,
     paid:          invoices.filter(i => i.status === 'PAID').length,
     totalAmount:   invoices.reduce((s, i) => s + (i.totalAmount || 0), 0),
     paidAmount:    invoices.filter(i => i.status === 'PAID').reduce((s, i) => s + (i.totalAmount || 0), 0),
-    unpaidAmount:  invoices.filter(i => i.status === 'UNPAID').reduce((s, i) => s + (i.totalAmount || 0), 0),
+    unpaidAmount:  invoices.filter(i => ['UNPAID','PENDING_CASH'].includes(i.status)).reduce((s, i) => s + (i.totalAmount || 0), 0),
   }), [invoices]);
 
   return (

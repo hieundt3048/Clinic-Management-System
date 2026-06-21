@@ -19,6 +19,8 @@ import AdminStaffPage        from './pages/admin/AdminStaffPage';
 import DoctorAppointmentsPage  from './pages/doctor/DoctorAppointmentsPage';
 import DoctorPrescriptionsPage from './pages/doctor/DoctorPrescriptionsPage';
 import DoctorPatientsPage      from './pages/doctor/DoctorPatientsPage';
+import PrescriptionsPage from './pages/PrescriptionsPage';
+import TestResultsPage from './pages/TestResultsPage';
 import BillingPage from './pages/BillingPage';
 import { clearAuth } from './services/api';
 import './App.css';
@@ -109,6 +111,8 @@ function App() {
                       <Route path="/medication-reminder" element={<MedicationReminderPage />} />
                       <Route path="/medical-history"    element={<MedicalHistory />} />
                       <Route path="/profile" element={<UserProfilePage />} />
+                      <Route path="/prescriptions" element={<PrescriptionsPage />} />
+                      <Route path="/test-results"  element={<TestResultsPage />} />
                     </>
                   )}
 

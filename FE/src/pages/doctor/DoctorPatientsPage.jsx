@@ -53,7 +53,7 @@ const PatientCard = ({ patient }) => {
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900">{patient.name}</p>
             <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-400">
-              {patient.phone && <span>📞 {patient.phone}</span>}
+              {patient.phone && <span>{patient.phone}</span>}
               <span>🗓 {patient.appointmentCount} lần khám</span>
               <span>Lần cuối: {fmtDate(patient.lastVisit)}</span>
             </div>
@@ -99,7 +99,7 @@ const PatientCard = ({ patient }) => {
               </div>
               {latest.notes && (
                 <p className="text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-3 py-2">
-                  📝 {latest.notes}
+                  {latest.notes}
                 </p>
               )}
             </div>

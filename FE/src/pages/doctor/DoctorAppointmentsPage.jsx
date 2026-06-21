@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DoctorLayout from './DoctorLayout';
-import { getDoctorAppointments, updateAppointmentStatus, getStoredUser } from '../../services/api';
+import { getDoctorAppointments, updateAppointmentStatus, getStoredUser, getMyDoctorProfile } from '../../services/api';
 import {
   CalendarDaysIcon, ClockIcon, UserIcon, MagnifyingGlassIcon,
   FunnelIcon, ArrowPathIcon, ExclamationCircleIcon, CheckCircleIcon,
@@ -116,7 +116,6 @@ const DoctorAppointmentsPage = () => {
   const [toast, setToast]       = useState({ msg:'', type:'' });
 
   const user = getStoredUser();
-  const doctorId = user?.doctorId ?? user?.userId;
 
   const showToast = (msg, type='success') => { setToast({msg, type}); setTimeout(() => setToast({msg:'',type:''}), 3000); };
 
@@ -124,16 +123,28 @@ const DoctorAppointmentsPage = () => {
     const load = async () => {
       setLoading(true); setError('');
       try {
+        // Lấy doctorId: ưu tiên từ localStorage, nếu không có thì gọi API /doctors/me
+        let doctorId = user?.doctorId;
+        if (!doctorId) {
+          const profile = await getMyDoctorProfile(); // GET /api/doctors/me
+          doctorId = profile.doctorId;
+          // Lưu lại vào localStorage để lần sau không phải gọi lại
+          const stored = getStoredUser();
+          if (stored) {
+            stored.doctorId = doctorId;
+            localStorage.setItem('user', JSON.stringify(stored));
+          }
+        }
         // GET /api/appointments/history/doctor/{doctorId}
         const data = await getDoctorAppointments(doctorId);
         setAppointments(Array.isArray(data) ? data : []);
       } catch (e) {
         if (e.response?.status === 404) setAppointments([]);
-        else setError('Không thể tải lịch hẹn.');
+        else setError('Không thể tải lịch hẹn. Vui lòng thử lại.');
       } finally { setLoading(false); }
     };
-    if (doctorId) load();
-  }, [doctorId]);
+    load();
+  }, []);
 
   const handleStatus = async (id, newStatus) => {
     setUpdating(id);

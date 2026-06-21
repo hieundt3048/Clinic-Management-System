@@ -100,9 +100,6 @@ export const toggleReminder = (id, active) =>
 
 export const deleteReminder = (id) =>
   apiClient.delete(`/reminders/medication/${id}`);
- 
-export const getMyPrescriptions = (patientId) =>
-  apiClient.get(`/prescriptions/patient/${patientId}`).then((r) => r.data);
 
 export const getMyInvoices = () =>
   apiClient.get('/invoices/me').then((r) => r.data.data);
@@ -184,4 +181,23 @@ export const createPrescription = (payload) =>
  
 // GET /api/health-metrics/{patientId}
 export const getPatientHealthMetrics = (patientId) =>
+  apiClient.get(`/health-metrics/${patientId}`).then((r) => r.data);
+
+// PATCH /api/invoices/{id}/confirm-cash  → Admin duyệt tiền mặt → PAID
+export const confirmCashPayment = (id) =>
+  apiClient.patch(`/invoices/${id}/confirm-cash`).then((r) => r.data.data);
+
+export const getMyDoctorProfile = () =>
+  apiClient.get('/doctors/me').then((r) => r.data.data);
+
+// GET /api/prescriptions/patient/{patientId} → List<PrescriptionResponse>
+export const getMyPrescriptions = (patientId) =>
+  apiClient.get(`/prescriptions/patient/${patientId}`).then((r) => r.data);
+ 
+// GET /api/service-requests/patient/{patientId} → List<ServiceRequestResponse>
+export const getMyServiceRequests = (patientId) =>
+  apiClient.get(`/service-requests/patient/${patientId}`).then((r) => r.data);
+ 
+// GET /api/health-metrics/{patientId} → List<HealthMetricResponse>
+export const getMyHealthMetrics = (patientId) =>
   apiClient.get(`/health-metrics/${patientId}`).then((r) => r.data);

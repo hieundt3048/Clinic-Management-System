@@ -257,7 +257,7 @@ const DoctorPrescriptionsPage = () => {
         // BE: GET /api/prescriptions/patient/{patientId} — không có endpoint by doctor
         // Tạm lấy từ lịch hẹn completed và fetch prescription per appointment
         // (hoặc chờ BE thêm endpoint)
-      } catch { /* silent */ } finally { setLoading(false); }
+      } catch { } finally { setLoading(false); }
     };
     if (doctorId) load();
   }, [doctorId]);
