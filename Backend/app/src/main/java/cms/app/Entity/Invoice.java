@@ -41,7 +41,7 @@ public class Invoice {
     private PaymentStatus status;
 
     public enum PaymentStatus {
-    UNPAID, PAID
+    UNPAID, PENDING_CASH, PAID
     }
 
     @PrePersist

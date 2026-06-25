@@ -17,12 +17,16 @@ import cms.app.Dto.AuthResponse;
 import cms.app.Dto.LoginRequest;
 import cms.app.Dto.RefreshTokenRequest;
 import cms.app.Dto.RegisterRequest;
+import cms.app.Entity.Doctor;
 import cms.app.Entity.Patient;
 import cms.app.Entity.RefreshToken;
+import cms.app.Entity.Specialty;
 import cms.app.Entity.User;
 import cms.app.Exception.ResourceNotFoundException;
+import cms.app.Repository.DoctorRepository;
 import cms.app.Repository.PatientRepository;
 import cms.app.Repository.RefreshTokenRepository;
+import cms.app.Repository.SpecialtyRepository;
 import cms.app.Repository.UserRepository;
 
 /**
@@ -39,6 +43,8 @@ public class AuthService implements IAuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authManager;
     private final UserDetailsService userDetailsService;
+    private final SpecialtyRepository specialtyRepo;
+    private final DoctorRepository doctorRepo;
 
     @Value("${jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
@@ -50,7 +56,9 @@ public class AuthService implements IAuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuthenticationManager authManager,
-            UserDetailsService userDetailsService) {
+            UserDetailsService userDetailsService,
+            SpecialtyRepository specialtyRepo,
+            DoctorRepository doctorRepo) {
         this.userRepo = userRepo;
         this.patientRepo = patientRepo;
         this.refreshTokenRepo = refreshTokenRepo;
@@ -58,6 +66,8 @@ public class AuthService implements IAuthService {
         this.jwtService = jwtService;
         this.authManager = authManager;
         this.userDetailsService = userDetailsService;
+        this.specialtyRepo = specialtyRepo;
+        this.doctorRepo = doctorRepo;
     }
 
 // Đăng ký PATIENT
@@ -153,29 +163,49 @@ public class AuthService implements IAuthService {
     @Override
     @Transactional
     public AuthResponse createStaffAccount(RegisterRequest request, String role) {
-        if (userRepo.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email đã được sử dụng: " + request.getEmail());
-        }
-
-        User.Role userRole;
-        try {
-            userRole = User.Role.valueOf(role.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Role không hợp lệ: " + role);
-        }
-
-        if (userRole == User.Role.PATIENT) {
-            throw new IllegalArgumentException("Dùng /register để tạo tài khoản bệnh nhân");
-        }
-
-        User account = new User();
-        account.setEmail(request.getEmail());
-        account.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        account.setRole(userRole);
-        userRepo.save(account);
-
-        return buildAuthResponse(account);
+    if (userRepo.existsByEmail(request.getEmail())) {
+        throw new IllegalArgumentException("Email đã được sử dụng: " + request.getEmail());
     }
+ 
+    User.Role userRole;
+    try {
+        userRole = User.Role.valueOf(role.toUpperCase());
+    } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("Role không hợp lệ: " + role);
+    }
+ 
+    if (userRole == User.Role.PATIENT) {
+        throw new IllegalArgumentException("Dùng /register để tạo tài khoản bệnh nhân");
+    }
+ 
+    // 1. Tạo User
+    User account = new User();
+    account.setEmail(request.getEmail());
+    account.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+    account.setPhone(request.getPhone());
+    account.setRole(userRole);
+    account.setStatus(true);
+    userRepo.save(account);
+ 
+    // 2. Nếu là DOCTOR → tạo thêm Doctor entity
+    if (userRole == User.Role.DOCTOR) {
+        if (request.getSpecialtyId() == null) {
+            throw new IllegalArgumentException("Chuyên khoa không được để trống khi tạo tài khoản bác sĩ");
+        }
+        Specialty specialty = specialtyRepo.findById(request.getSpecialtyId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Không tìm thấy chuyên khoa ID: " + request.getSpecialtyId()));
+ 
+        Doctor doctor = new Doctor();
+        doctor.setUser(account);
+        doctor.setSpecialty(specialty);
+        doctor.setFullName(request.getFullName().trim());
+        doctor.setRoomNumber(request.getRoomNumber() != null ? request.getRoomNumber().trim() : null);
+        doctorRepo.save(doctor);
+    }
+ 
+    return buildAuthResponse(account);
+}
 
 
     // Private helpers

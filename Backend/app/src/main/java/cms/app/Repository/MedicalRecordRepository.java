@@ -49,4 +49,27 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, In
         WHERE r.recordId = :recordId
         """)
     Optional<MedicalRecord> findByIdWithDetails(@Param("recordId") Integer recordId);
+
+    // Lấy tất cả bệnh án theo bác sĩ (để hiển thị danh sách chọn khi kê đơn)
+    @Query("""
+        SELECT m FROM MedicalRecord m
+        JOIN FETCH m.patient
+        JOIN FETCH m.doctor
+        WHERE m.doctor.doctorId = :doctorId
+        ORDER BY m.createdAt DESC
+        """)
+    List<MedicalRecord> findByDoctorId(@Param("doctorId") Integer doctorId);
+    
+    // Kiểm tra appointment đã có bệnh án chưa (tránh tạo trùng)
+    boolean existsByAppointment_AppointmentId(Integer appointmentId);
+    
+    // Lấy bệnh án theo patientId (cho trang Lịch sử bệnh án ở FE)
+    @Query("""
+        SELECT m FROM MedicalRecord m
+        JOIN FETCH m.patient
+        JOIN FETCH m.doctor
+        WHERE m.patient.patientId = :patientId
+        ORDER BY m.createdAt DESC
+        """)
+    List<MedicalRecord> findByPatientId(@Param("patientId") Integer patientId);
 }

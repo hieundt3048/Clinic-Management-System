@@ -31,7 +31,7 @@ public class Prescription {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(length = 500)
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String notes;
 
     @OneToMany(mappedBy = "prescription",

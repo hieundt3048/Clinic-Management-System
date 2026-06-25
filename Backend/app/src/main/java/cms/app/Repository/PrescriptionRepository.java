@@ -38,4 +38,6 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Inte
         ORDER BY p.createdAt DESC
         """)
     List<Prescription> findByPatientId(@Param("patientId") Integer patientId);
+
+    boolean existsByMedicalRecord_RecordId(Integer recordId);
 }

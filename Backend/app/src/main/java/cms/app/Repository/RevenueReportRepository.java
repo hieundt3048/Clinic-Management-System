@@ -1,18 +1,21 @@
 package cms.app.Repository;
 
-import cms.app.Entity.Invoice;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import cms.app.Entity.Invoice;
+
 /**
- * Repository cho báo cáo doanh thu (UC12).
+ * Repository cho báo cáo doanh thu.
  * Tất cả query đều lọc theo Invoice.status = 'PAID' và khoảng thời gian.
  */
+@Repository
 public interface RevenueReportRepository extends JpaRepository<Invoice, Integer> {
 
     // ─────────────────────────────────────────

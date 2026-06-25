@@ -46,7 +46,7 @@ public class MedicationReminder {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String note;
 
     @Column(nullable = false)

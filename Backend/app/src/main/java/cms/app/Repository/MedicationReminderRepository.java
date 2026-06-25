@@ -1,14 +1,17 @@
 package cms.app.Repository;
 
-import cms.app.Entity.MedicationReminder;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import cms.app.Entity.MedicationReminder;
+
+@Repository
 public interface MedicationReminderRepository extends JpaRepository<MedicationReminder, Integer> {
 
     /** Lấy tất cả nhắc nhở đang hoạt động của một bệnh nhân */

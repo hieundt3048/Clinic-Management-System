@@ -1,14 +1,17 @@
 package cms.app.Repository;
 
-import cms.app.Entity.HealthMetric;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import cms.app.Entity.HealthMetric;
+
+@Repository
 public interface HealthMetricRepository extends JpaRepository<HealthMetric, Integer> {
 
     /** Lấy toàn bộ lịch sử chỉ số của bệnh nhân, mới nhất trước */

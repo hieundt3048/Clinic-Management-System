@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -87,5 +88,13 @@ public class InvoiceController {
     public ResponseEntity<ApiResponse<List<InvoiceResponse>>> getAllInvoices() {
         List<InvoiceResponse> data = invoiceService.getAllInvoices();
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách hóa đơn thành công", data));
+    }
+
+    @PatchMapping("/{id}/confirm-cash")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<InvoiceResponse>> confirmCash(
+            @PathVariable Integer id) {
+        InvoiceResponse result = invoiceService.confirmCashPayment(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Đã duyệt thanh toán tiền mặt", result));
     }
 }

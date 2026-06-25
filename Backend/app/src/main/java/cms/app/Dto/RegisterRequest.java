@@ -42,6 +42,9 @@ public class RegisterRequest {
 
     private String gender;
 
+    private Integer specialtyId;
+    private String roomNumber;
+
     // ==================== Getters & Setters ====================
 
     public String getEmail() { return email; }
@@ -64,4 +67,10 @@ public class RegisterRequest {
 
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
+
+    public Integer getSpecialtyId() { return specialtyId; }
+    public void setSpecialtyId(Integer specialtyId) { this.specialtyId = specialtyId; }
+
+    public String getRoomNumber() { return roomNumber; }
+    public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
 }

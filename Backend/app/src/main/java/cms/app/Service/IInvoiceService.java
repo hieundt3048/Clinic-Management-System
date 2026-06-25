@@ -19,4 +19,6 @@ public interface IInvoiceService {
     InvoiceResponse payInvoice(String patientUserEmail, Integer invoiceId, PayInvoiceRequest request);
 
     List<InvoiceResponse> getAllInvoices();
+
+    InvoiceResponse confirmCashPayment(Integer invoiceId);
 }

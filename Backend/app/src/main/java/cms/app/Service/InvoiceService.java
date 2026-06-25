@@ -110,6 +110,7 @@ public class InvoiceService implements IInvoiceService {
                 .collect(Collectors.toList());
     }
 
+    
     @Override
     @Transactional
     public InvoiceResponse payInvoice(String patientUserEmail, Integer invoiceId, PayInvoiceRequest request) {
@@ -128,14 +129,43 @@ public class InvoiceService implements IInvoiceService {
             throw new InvalidRequestException("Hóa đơn đã được thanh toán.");
         }
 
-        invoice.setStatus(PaymentStatus.PAID);
-        invoice.setPaymentMethod(request.getPaymentMethod().trim());
-        invoice.setPaidAt(LocalDateTime.now());
+        String method = request.getPaymentMethod().trim();
+
+        if ("CASH".equals(method)) {
+            // Tiền mặt → chờ đến quầy, chưa PAID ngay
+            invoice.setStatus(PaymentStatus.PENDING_CASH);
+            invoice.setPaymentMethod(method);
+            invoice.setPaidAt(null); // chưa thanh toán thật
+        } else {
+            // Chuyển khoản / Thẻ → PAID luôn
+            invoice.setStatus(PaymentStatus.PAID);
+            invoice.setPaymentMethod(method);
+            invoice.setPaidAt(LocalDateTime.now());
+        }
 
         Invoice saved = invoiceRepository.save(invoice);
         return toResponse(saved);
     }
 
+    // ─── Thêm hàm mới: Admin duyệt thanh toán tiền mặt ──────────────────────────    
+    @Override
+    @Transactional
+    public InvoiceResponse confirmCashPayment(Integer invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn: " + invoiceId));
+
+        if (invoice.getStatus() != PaymentStatus.PENDING_CASH) {
+            throw new InvalidRequestException(
+                    "Chỉ duyệt được hóa đơn đang chờ thanh toán tiền mặt. Trạng thái hiện tại: "
+                    + invoice.getStatus());
+        }
+
+        invoice.setStatus(PaymentStatus.PAID);
+        invoice.setPaidAt(LocalDateTime.now());
+
+        Invoice saved = invoiceRepository.save(invoice);
+        return toResponse(saved);
+    }
     private boolean isAdmin(Iterable<? extends GrantedAuthority> authorities) {
         for (GrantedAuthority a : authorities) {
             if (ROLE_ADMIN.equals(a.getAuthority())) {

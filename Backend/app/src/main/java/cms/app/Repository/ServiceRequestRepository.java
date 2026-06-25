@@ -1,14 +1,17 @@
 package cms.app.Repository;
 
-import cms.app.Entity.ServiceRequest;
-import cms.app.Entity.ServiceRequest.RequestStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import cms.app.Entity.ServiceRequest;
+import cms.app.Entity.ServiceRequest.RequestStatus;
+
+@Repository
 public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, Integer> {
 
     /** Load đầy đủ join để tránh N+1 */
