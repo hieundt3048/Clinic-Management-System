@@ -201,3 +201,15 @@ export const getMyServiceRequests = (patientId) =>
 // GET /api/health-metrics/{patientId} → List<HealthMetricResponse>
 export const getMyHealthMetrics = (patientId) =>
   apiClient.get(`/health-metrics/${patientId}`).then((r) => r.data);
+
+// POST /api/medical-records — Tạo bệnh án mới
+export const createMedicalRecord = (payload) =>
+  apiClient.post('/medical-records', payload).then((r) => r.data.data);
+ 
+// GET /api/medical-records/doctor/{doctorId}
+export const getDoctorMedicalRecords = (doctorId) =>
+  apiClient.get(`/medical-records/doctor/${doctorId}`).then((r) => r.data.data);
+ 
+// GET /api/medical-records/patient/{patientId}
+export const getPatientMedicalRecords = (patientId) =>
+  apiClient.get(`/medical-records/patient/${patientId}`).then((r) => r.data.data);
