@@ -6,7 +6,9 @@ import HomePage from './pages/HomePage';
 import AppointmentHistoryPage from './pages/AppointmentHistoryPage';
 import AppointmentPage from './pages/AppointmentPage';
 import HealthProfilePage from './pages/HealthProfilePage';
+import HealthTrackingPage from './pages/HealthTrackingPage';
 import MedicationReminderPage from './pages/MedicationReminderPage';
+import AppointmentNotificationsPage from './pages/AppointmentNotificationsPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import MedicalHistory from './pages/MedicalHistory';
@@ -16,8 +18,12 @@ import AdminRevenuePage      from './pages/admin/AdminRevenuePage';
 import AdminAppointmentsPage from './pages/admin/AdminAppointmentsPage';
 import AdminInvoicesPage     from './pages/admin/AdminInvoicesPage';
 import AdminStaffPage        from './pages/admin/AdminStaffPage';
+import AdminUsersPage        from './pages/admin/AdminUsersPage';
+import AdminSystemMonitorPage from './pages/admin/AdminSystemMonitorPage';
 import DoctorAppointmentsPage  from './pages/doctor/DoctorAppointmentsPage';
 import DoctorPrescriptionsPage from './pages/doctor/DoctorPrescriptionsPage';
+import DoctorMedicalRecordsPage from './pages/doctor/DoctorMedicalRecordsPage';
+import DoctorServiceRequestsPage from './pages/doctor/DoctorServiceRequestsPage';
 import DoctorPatientsPage      from './pages/doctor/DoctorPatientsPage';
 import PrescriptionsPage from './pages/PrescriptionsPage';
 import TestResultsPage from './pages/TestResultsPage';
@@ -96,18 +102,24 @@ function App() {
                   <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
                   <Route path="/admin/invoices"     element={<AdminInvoicesPage />} />
                   <Route path="/admin/staff"        element={<AdminStaffPage />} />
+                  <Route path="/admin/users"        element={<AdminUsersPage />} />
+                  <Route path="/admin/system-monitor" element={<AdminSystemMonitorPage />} />
 
                   {/* Doctor */}
                   <Route path="/doctor"               element={<DoctorAppointmentsPage />} />
                   <Route path="/doctor/prescriptions" element={<DoctorPrescriptionsPage />} />
+                  <Route path="/doctor/medical-records" element={<DoctorMedicalRecordsPage />} />
+                  <Route path="/doctor/service-requests" element={<DoctorServiceRequestsPage />} />
                   <Route path="/doctor/patients"      element={<DoctorPatientsPage />} />
 
                   {/* Patient */}
                   {user.role === 'PATIENT' && (
                     <>
                       <Route path="/appointments"       element={<AppointmentPage />} />
+                      <Route path="/appointment-notifications" element={<AppointmentNotificationsPage />} />
                       <Route path="/appointment-history" element={<AppointmentHistoryPage />} />
                       <Route path="/health-profile"     element={<HealthProfilePage />} />
+                      <Route path="/health-tracking"    element={<HealthTrackingPage />} />
                       <Route path="/medication-reminder" element={<MedicationReminderPage />} />
                       <Route path="/medical-history"    element={<MedicalHistory />} />
                       <Route path="/profile" element={<UserProfilePage />} />

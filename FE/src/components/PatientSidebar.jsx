@@ -5,11 +5,14 @@ import {
   ClockIcon,
   UserCircleIcon,
   BellIcon,
+  BellAlertIcon,
+  HeartIcon,
   DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 
 const navItems = [
   { to: '/appointments', label: 'Đặt lịch khám', icon: CalendarIcon },
+  { to: '/appointment-notifications', label: 'Thông báo lịch hẹn', icon: BellAlertIcon },
   { to: '/appointment-history', label: 'Lịch sử đặt khám', icon: ClockIcon },
   { to: '/health-profile', label: 'Hồ sơ sức khỏe', icon: UserCircleIcon },
   { to: '/medication-reminder', label: 'Nhắc uống thuốc', icon: BellIcon },

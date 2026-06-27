@@ -47,8 +47,8 @@ const PatientCard = ({ patient }) => {
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       <div className="p-4 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
-            <UserIcon className="h-5 w-5 text-teal-600" />
+          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+            <UserIcon className="h-5 w-5 text-blue-600" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900">{patient.name}</p>
@@ -60,7 +60,7 @@ const PatientCard = ({ patient }) => {
           </div>
         </div>
         <button onClick={loadMetrics}
-          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 transition shrink-0">
+          className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition shrink-0">
           <HeartIcon className="h-3.5 w-3.5" />
           {expanded ? <ChevronUpIcon className="h-3.5 w-3.5" /> : <ChevronDownIcon className="h-3.5 w-3.5" />}
           Chỉ số
@@ -71,7 +71,7 @@ const PatientCard = ({ patient }) => {
         <div className="border-t border-gray-100 px-4 py-4 bg-gray-50">
           {loadingMx && (
             <div className="flex justify-center py-4">
-              <ArrowPathIcon className="h-5 w-5 animate-spin text-teal-500" />
+              <ArrowPathIcon className="h-5 w-5 animate-spin text-blue-500" />
             </div>
           )}
           {!loadingMx && (!metrics || metrics.length === 0) && (
@@ -161,9 +161,9 @@ const DoctorPatientsPage = () => {
         </div>
 
         {!loading && (
-          <div className="bg-teal-50 rounded-xl border border-teal-100 px-4 py-3 inline-flex items-center gap-3">
-            <span className="text-2xl font-bold text-teal-700">{patients.length}</span>
-            <span className="text-sm text-teal-600">bệnh nhân đã khám</span>
+          <div className="bg-blue-50 rounded-xl border border-blue-100 px-4 py-3 inline-flex items-center gap-3">
+            <span className="text-2xl font-bold text-blue-700">{patients.length}</span>
+            <span className="text-sm text-blue-600">bệnh nhân đã khám</span>
           </div>
         )}
 
@@ -171,10 +171,10 @@ const DoctorPatientsPage = () => {
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input type="text" placeholder="Tìm bệnh nhân..."
             value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
 
-        {loading && <div className="flex justify-center py-16"><ArrowPathIcon className="h-7 w-7 animate-spin text-teal-500" /></div>}
+        {loading && <div className="flex justify-center py-16"><ArrowPathIcon className="h-7 w-7 animate-spin text-blue-500" /></div>}
 
         {!loading && filtered.length === 0 && (
           <div className="flex flex-col items-center py-20 gap-3 text-gray-400">

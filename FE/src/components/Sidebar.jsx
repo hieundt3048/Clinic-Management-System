@@ -11,10 +11,13 @@ import {
   QuestionMarkCircleIcon,
   ChevronDownIcon,
   ClockIcon,
+  BellAlertIcon,
+  HeartIcon,
 } from '@heroicons/react/24/outline';
 
 const appointmentSubItems = [
   { name: 'Đặt lịch khám', href: '/appointments', icon: CalendarIcon },
+  { name: 'Thông báo lịch hẹn', href: '/appointment-notifications', icon: BellAlertIcon },
   { name: 'Lịch sử đặt khám', href: '/appointment-history', icon: ClockIcon },
   { name: 'Hồ sơ sức khỏe', href: '/health-profile', icon: UserCircleIcon },
   { name: 'Nhắc uống thuốc', href: '/medication-reminder', icon: BeakerIcon },

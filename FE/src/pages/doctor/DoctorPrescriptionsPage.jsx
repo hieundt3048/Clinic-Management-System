@@ -39,7 +39,7 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
   const selectedAppt = appointments.find(a => a.appointmentId === Number(appointmentId));
 
   const inputCls = (err) =>
-    `w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 ${err ? 'border-red-400 bg-red-50' : 'border-gray-200'}`;
+    `w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${err ? 'border-red-400 bg-red-50' : 'border-gray-200'}`;
 
   // ── Bước 1: Tạo bệnh án ─────────────────────────────────────────────────────
   const validateStep1 = () => {
@@ -118,8 +118,8 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
               {step === 1 ? 'Bước 1: Ghi nhận chẩn đoán' : 'Bước 2: Kê đơn thuốc'}
             </h2>
             <div className="flex items-center gap-2 mt-1.5">
-              <span className={`h-1.5 w-8 rounded-full ${step >= 1 ? 'bg-teal-500' : 'bg-gray-200'}`} />
-              <span className={`h-1.5 w-8 rounded-full ${step >= 2 ? 'bg-teal-500' : 'bg-gray-200'}`} />
+              <span className={`h-1.5 w-8 rounded-full ${step >= 1 ? 'bg-blue-500' : 'bg-gray-200'}`} />
+              <span className={`h-1.5 w-8 rounded-full ${step >= 2 ? 'bg-blue-500' : 'bg-gray-200'}`} />
             </div>
           </div>
           <button onClick={onClose}><XMarkIcon className="h-5 w-5 text-gray-400" /></button>
@@ -154,10 +154,10 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
               </div>
 
               {selectedAppt && (
-                <div className="bg-teal-50 border border-teal-100 rounded-lg px-4 py-3 text-sm text-teal-700">
+                <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-700">
                   <UserIcon className="h-4 w-4 inline mr-1" />
                   Bệnh nhân: <span className="font-semibold">{selectedAppt.patientName}</span>
-                  {selectedAppt.reason && <p className="mt-1 text-teal-600">Lý do khám: {selectedAppt.reason}</p>}
+                  {selectedAppt.reason && <p className="mt-1 text-blue-600">Lý do khám: {selectedAppt.reason}</p>}
                 </div>
               )}
 
@@ -198,7 +198,7 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-gray-700">Danh sách thuốc</p>
                 <button onClick={addMed}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 transition">
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition">
                   <PlusIcon className="h-3.5 w-3.5" />Thêm thuốc
                 </button>
               </div>
@@ -268,7 +268,7 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
           {step === 1 ? (
             <>
               <button onClick={handleCreateRecord} disabled={saving}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-700 disabled:opacity-60 transition">
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 transition">
                 {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <ArrowRightIcon className="h-4 w-4" />}
                 {saving ? 'Đang lưu...' : 'Tiếp tục: Kê đơn'}
               </button>
@@ -281,7 +281,7 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
                 <ArrowLeftIcon className="h-4 w-4" />Quay lại
               </button>
               <button onClick={handleCreatePrescription} disabled={saving}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-700 disabled:opacity-60 transition">
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 transition">
                 {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <CheckCircleIcon className="h-4 w-4" />}
                 {saving ? 'Đang lưu...' : 'Hoàn tất kê đơn'}
               </button>
@@ -299,11 +299,11 @@ const RecordCard = ({ record }) => (
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-4">
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-start gap-3">
-        <div className="p-2.5 rounded-xl bg-teal-100 shrink-0">
-          <DocumentTextIcon className="h-5 w-5 text-teal-600" />
+        <div className="p-2.5 rounded-xl bg-blue-100 shrink-0">
+          <DocumentTextIcon className="h-5 w-5 text-blue-600" />
         </div>
         <div>
-          <p className="text-xs text-teal-600 font-semibold uppercase tracking-wide">Bệnh án #{record.recordId}</p>
+          <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Bệnh án #{record.recordId}</p>
           <p className="text-sm font-bold text-gray-900 mt-0.5 flex items-center gap-1">
             <UserIcon className="h-3.5 w-3.5 text-gray-400" />{record.patientName}
           </p>
@@ -363,7 +363,7 @@ const DoctorPrescriptionsPage = () => {
             <p className="text-sm text-gray-400 mt-0.5">Ghi nhận chẩn đoán và kê đơn cho bệnh nhân sau khám</p>
           </div>
           <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition">
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
             <PlusIcon className="h-4 w-4" />Tạo bệnh án mới
           </button>
         </div>
@@ -377,7 +377,7 @@ const DoctorPrescriptionsPage = () => {
           </div>
         )}
 
-        {loading && <div className="flex justify-center py-16"><ArrowPathIcon className="h-7 w-7 animate-spin text-teal-500" /></div>}
+        {loading && <div className="flex justify-center py-16"><ArrowPathIcon className="h-7 w-7 animate-spin text-blue-500" /></div>}
 
         {!loading && records.length === 0 && (
           <div className="flex flex-col items-center py-20 gap-3 text-gray-400">

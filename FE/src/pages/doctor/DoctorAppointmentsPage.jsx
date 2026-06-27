@@ -38,19 +38,19 @@ const AppointmentCard = ({ appt, onStatus, updating }) => {
 
   return (
     <div className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
-      isToday ? 'border-teal-200' : 'border-gray-200'
+      isToday ? 'border-blue-200' : 'border-gray-200'
     }`}>
-      {isToday && <div className="h-1 bg-gradient-to-r from-teal-500 to-teal-400" />}
+      {isToday && <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-400" />}
       <div className="p-4 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
-            <UserIcon className="h-5 w-5 text-teal-600" />
+          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+            <UserIcon className="h-5 w-5 text-blue-600" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900">{appt.patientName}</p>
             {appt.patientPhone && (
               <a href={`tel:${appt.patientPhone}`}
-                className="flex items-center gap-1 text-xs text-teal-600 hover:underline mt-0.5">
+                className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-0.5">
                 <PhoneIcon className="h-3 w-3" />{appt.patientPhone}
               </a>
             )}
@@ -191,7 +191,7 @@ const DoctorAppointmentsPage = () => {
         {!loading && (
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label:'Hôm nay',      value: stats.today,    color:'text-teal-700',   bg:'bg-teal-50' },
+              { label:'Hôm nay',      value: stats.today,    color:'text-blue-700',   bg:'bg-blue-50' },
               { label:'Chờ xác nhận', value: stats.pending,  color:'text-yellow-700', bg:'bg-yellow-50' },
               { label:'Đã xác nhận',  value: stats.confirmed,color:'text-blue-700',   bg:'bg-blue-50' },
             ].map(s => (
@@ -217,18 +217,18 @@ const DoctorAppointmentsPage = () => {
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input type="text" placeholder="Tìm bệnh nhân, lý do khám..."
               value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="relative">
             <FunnelIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <select value={filter} onChange={e => setFilter(e.target.value)}
-              className="pl-9 pr-8 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white appearance-none cursor-pointer">
+              className="pl-9 pr-8 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none cursor-pointer">
               {FILTERS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
             </select>
           </div>
         </div>
 
-        {loading && <div className="flex justify-center py-16"><ArrowPathIcon className="h-7 w-7 animate-spin text-teal-500" /></div>}
+        {loading && <div className="flex justify-center py-16"><ArrowPathIcon className="h-7 w-7 animate-spin text-blue-500" /></div>}
         {!loading && error && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
             <ExclamationCircleIcon className="h-5 w-5 shrink-0" />{error}
@@ -246,8 +246,8 @@ const DoctorAppointmentsPage = () => {
           const label = isToday ? 'Hôm nay' : d.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit' });
           return (
             <section key={dateStr} className="space-y-2">
-              <h3 className={`text-xs font-semibold uppercase tracking-wide flex items-center gap-2 ${isToday ? 'text-teal-600' : 'text-gray-400'}`}>
-                {isToday && <span className="h-2 w-2 rounded-full bg-teal-500" />}
+              <h3 className={`text-xs font-semibold uppercase tracking-wide flex items-center gap-2 ${isToday ? 'text-blue-600' : 'text-gray-400'}`}>
+                {isToday && <span className="h-2 w-2 rounded-full bg-blue-500" />}
                 {label} <span className="text-gray-300">({appts.length})</span>
               </h3>
               {appts.map(a => (

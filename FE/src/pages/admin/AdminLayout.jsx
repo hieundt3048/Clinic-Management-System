@@ -9,6 +9,7 @@ import {
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   BuildingOffice2Icon,
+  ServerStackIcon,
 } from '@heroicons/react/24/outline';
 import { clearAuth } from '../../services/api';
 
@@ -17,6 +18,8 @@ const NAV = [
   { href: '/admin/appointments', label: 'Lịch hẹn',   icon: CalendarDaysIcon },
   { href: '/admin/invoices', label: 'Hóa đơn',         icon: CurrencyDollarIcon },
   { href: '/admin/staff',    label: 'Nhân viên',        icon: UsersIcon },
+  { href: '/admin/users',    label: 'Tài khoản',      icon: UsersIcon },
+  { href: '/admin/system-monitor', label: 'Giám sát', icon: ServerStackIcon },
 ];
 
 const AdminLayout = ({ children }) => {
@@ -37,7 +40,7 @@ const AdminLayout = ({ children }) => {
           <BuildingOffice2Icon className="h-5 w-5 text-white" />
         </div>
         <div>
-          <p className="text-white font-bold text-sm">TTS CLINIC</p>
+          <p className="text-white font-bold text-sm">An Khang Care</p>
           <p className="text-blue-200 text-xs">Quản trị hệ thống</p>
         </div>
       </div>

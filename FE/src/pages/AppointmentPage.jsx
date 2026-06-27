@@ -4,7 +4,6 @@ import PatientLayout from '../components/PatientLayout';
 import {
   getSpecialties,
   getDoctorsBySpecialty,
-  getExamServices,
   getTimeSlots,
   getMyHealthProfile,
   bookAppointment,
@@ -57,13 +56,11 @@ const AppointmentPage = () => {
 
   const [specialties, setSpecialties] = useState([]);
   const [doctors, setDoctors] = useState([]);
-  const [services, setServices] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [profile, setProfile] = useState(null);
 
   const [specialtyId, setSpecialtyId] = useState('');
   const [doctorId, setDoctorId] = useState('');
-  const [serviceId, setServiceId] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [appointmentType, setAppointmentType] = useState('new');
@@ -73,20 +70,17 @@ const AppointmentPage = () => {
 
   const selectedSpecialty = specialties.find((s) => String(s.specialtyId) === String(specialtyId));
   const selectedDoctor = doctors.find((d) => String(d.doctorId) === String(doctorId));
-  const selectedService = services.find((s) => String(s.serviceId) === String(serviceId));
-  const estimatedPrice = selectedService?.basePrice ?? 150000;
+  const estimatedPrice = 150000;
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [specs, svcs, prof] = await Promise.all([
+        const [specs, prof] = await Promise.all([
           getSpecialties().catch(() => []),
-          getExamServices().catch(() => []),
           getMyHealthProfile().catch(() => null),
         ]);
         setSpecialties(specs?.length ? specs : FALLBACK_SPECIALTIES);
-        setServices(svcs || []);
         setProfile(prof);
       } catch {
         setSpecialties(FALLBACK_SPECIALTIES);
@@ -315,25 +309,6 @@ const AppointmentPage = () => {
                   <p className="text-red-500 text-sm mt-2">{errors.doctorId}</p>
                 )}
 
-                {services.length > 0 && (
-                  <>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 mt-6">
-                      Gói khám / Dịch vụ (tùy chọn)
-                    </label>
-                    <select
-                      value={serviceId}
-                      onChange={(e) => setServiceId(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    >
-                      <option value="">Khám chuyên khoa tiêu chuẩn</option>
-                      {services.map((s) => (
-                        <option key={s.serviceId} value={s.serviceId}>
-                          {s.serviceName} — {formatCurrency(s.basePrice)}
-                        </option>
-                      ))}
-                    </select>
-                  </>
-                )}
               </section>
             )}
 
@@ -541,9 +516,9 @@ const AppointmentPage = () => {
                   <dd className="font-medium">{selectedDoctor?.fullName || '—'}</dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Dịch vụ</dt>
+                  <dt className="text-gray-500">Hình thức khám</dt>
                   <dd className="font-medium">
-                    {selectedService?.serviceName || 'Khám chuyên khoa tiêu chuẩn'}
+                    {'Khám chuyên khoa tiêu chuẩn'}
                   </dd>
                 </div>
                 <div>
