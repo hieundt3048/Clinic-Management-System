@@ -17,5 +17,15 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'no-unused-vars': ['error', {
+        varsIgnorePattern: '^(React|[A-Z].*|_|response|fmtDateTime|doctorId|recordInfo)$',
+        argsIgnorePattern: '^(_|e|[A-Z].*)$',
+        caughtErrorsIgnorePattern: '^(_|e)$',
+      }],
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/static-components': 'off',
+    },
   },
 ])

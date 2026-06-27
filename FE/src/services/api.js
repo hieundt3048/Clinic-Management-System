@@ -51,8 +51,10 @@ export function clearAuth() {
   localStorage.removeItem('token');
 }
 
-export const getExamServices = () =>
+export const getClinicalServices = () =>
   apiClient.get('/catalog/services').then((r) => r.data.data);
+
+export const getExamServices = getClinicalServices;
 
 export const getTimeSlots = (doctorId, date) =>
   apiClient.get('/catalog/time-slots', { params: { doctorId, date } }).then((r) => r.data.data);
@@ -87,6 +89,11 @@ export const cancelAppointment = (appointmentId) =>
   apiClient.delete(`/appointments/${appointmentId}`).then((r) => r.data);
 
 export default apiClient;
+
+export const getMyFollowUpReminders = (daysAhead = 14) =>
+  apiClient
+    .get('/reminders/follow-up/me', { params: { daysAhead } })
+    .then((r) => r.data?.data || []);
 
 
 export const getActiveReminders = (patientId) =>
@@ -202,6 +209,16 @@ export const getMyServiceRequests = (patientId) =>
 export const getMyHealthMetrics = (patientId) =>
   apiClient.get(`/health-metrics/${patientId}`).then((r) => r.data);
 
+export const getHealthMetricSummary = (patientId) =>
+  apiClient.get(`/health-metrics/${patientId}/summary`).then((r) => r.data);
+
+export const recordHealthMetric = (payload) =>
+  apiClient.post('/health-metrics', payload).then((r) => r.data);
+
+export const deleteHealthMetric = (metricId) =>
+  apiClient.delete(`/health-metrics/${metricId}`);
+
+
 // POST /api/medical-records — Tạo bệnh án mới
 export const createMedicalRecord = (payload) =>
   apiClient.post('/medical-records', payload).then((r) => r.data.data);
@@ -213,3 +230,31 @@ export const getDoctorMedicalRecords = (doctorId) =>
 // GET /api/medical-records/patient/{patientId}
 export const getPatientMedicalRecords = (patientId) =>
   apiClient.get(`/medical-records/patient/${patientId}`).then((r) => r.data.data);
+// POST /api/service-requests → Doctor creates one or more clinical service requests
+export const createServiceRequests = (payload) =>
+  apiClient.post('/service-requests', payload).then((r) => r.data);
+
+// GET /api/service-requests/record/{recordId} → List<ServiceRequestResponse>
+export const getServiceRequestsByRecord = (recordId) =>
+  apiClient.get(`/service-requests/record/${recordId}`).then((r) => r.data);
+
+// GET /api/service-requests/status/{status} → List<ServiceRequestResponse>
+export const getServiceRequestsByStatus = (status) =>
+  apiClient.get(`/service-requests/status/${status}`).then((r) => r.data);
+
+// PATCH /api/service-requests/{id}/cancel
+export const cancelServiceRequest = (requestId) =>
+  apiClient.patch(`/service-requests/${requestId}/cancel`).then((r) => r.data);
+// PUT /api/medical-records/{recordId} → Doctor updates diagnosis/treatment/follow-up
+export const updateMedicalRecord = (recordId, payload) =>
+  apiClient.put(`/medical-records/${recordId}`, payload).then((r) => r.data.data);
+// GET /api/admin/users → admin account overview for all roles
+export const getAdminUserAccounts = () =>
+  apiClient.get('/admin/users').then((r) => r.data.data || []);
+
+// PATCH /api/admin/users/{userId}/status?active=true|false
+export const toggleAdminUserStatus = (userId, active) =>
+  apiClient.patch(`/admin/users/${userId}/status`, null, { params: { active } }).then((r) => r.data.data);
+// GET /api/admin/system-monitor → system monitoring snapshot
+export const getSystemMonitorSnapshot = () =>
+  apiClient.get('/admin/system-monitor').then((r) => r.data.data);
