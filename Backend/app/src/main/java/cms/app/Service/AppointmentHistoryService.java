@@ -12,6 +12,8 @@ import cms.app.Dto.AppointmentFilterRequest;
 import cms.app.Dto.AppointmentHistoryResponse;
 import cms.app.Entity.Appointment;
 import cms.app.Entity.ServiceCatalog;
+import cms.app.Entity.Specialty;
+import cms.app.Entity.User;
 import cms.app.Exception.ResourceNotFoundException;
 import cms.app.Repository.AppointmentHistoryRepository;
 
@@ -87,7 +89,12 @@ public class AppointmentHistoryService implements IAppointmentHistoryService {
     }
 
     private AppointmentHistoryResponse toResponse(Appointment a) {
-        ServiceCatalog svc = a.getService(); // nullable — lịch cũ không có service
+        ServiceCatalog svc = a.getService();
+        User patientUser = a.getPatient() != null ? a.getPatient().getUser() : null;
+        String patientPhone = patientUser != null ? patientUser.getPhone() : null;
+        Specialty specialty = a.getSpecialty() != null
+                ? a.getSpecialty()
+                : (a.getDoctor() != null ? a.getDoctor().getSpecialty() : null);
 
         return new AppointmentHistoryResponse(
                 a.getAppointmentId(),
@@ -95,24 +102,19 @@ public class AppointmentHistoryService implements IAppointmentHistoryService {
                 a.getStatus(),
                 a.getReason(),
                 a.isFollowUp(),
-                // Bệnh nhân
-                a.getPatient().getPatientId(),
-                a.getPatient().getFullName(),
-                a.getPatient().getUser().getPhone(),        // patientPhone
-                // Bác sĩ
-                a.getDoctor().getDoctorId(),
-                a.getDoctor().getFullName(),
-                a.getDoctor().getRoomNumber(),
-                // Chuyên khoa
-                a.getDoctor().getSpecialty().getSpecialtyId(),
-                a.getDoctor().getSpecialty().getSpecialtyName(),
-                // Dịch vụ khám (null nếu lịch cũ không lưu)
-                svc != null ? svc.getServiceId()   : null,
+                a.getPatient() != null ? a.getPatient().getPatientId() : null,
+                a.getPatient() != null ? a.getPatient().getFullName() : null,
+                patientPhone,
+                a.getDoctor() != null ? a.getDoctor().getDoctorId() : null,
+                a.getDoctor() != null ? a.getDoctor().getFullName() : null,
+                a.getDoctor() != null ? a.getDoctor().getRoomNumber() : null,
+                specialty != null ? specialty.getSpecialtyId() : null,
+                specialty != null ? specialty.getSpecialtyName() : null,
+                svc != null ? svc.getServiceId() : null,
                 svc != null ? svc.getServiceName() : null,
-                svc != null ? svc.getBasePrice()   : null
+                svc != null ? svc.getBasePrice() : null
         );
     }
-
     private boolean isEmptyFilter(AppointmentFilterRequest filter) {
         return filter.getStatus() == null
                 && filter.getFromDate() == null

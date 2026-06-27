@@ -7,18 +7,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import cms.app.Entity.User;
 import cms.app.Entity.User.Role;
+import cms.app.Repository.DoctorRepository;
+import cms.app.Repository.PatientRepository;
 import cms.app.Repository.UserRepository;
 import cms.app.Service.UserDetailsServiceImpl;
 
@@ -27,6 +28,12 @@ class UserDetailsServiceImplTest {
 
     @Mock
     private UserRepository userRepo;
+
+    @Mock
+    private PatientRepository patientRepo;
+
+    @Mock
+    private DoctorRepository doctorRepo;
 
     @InjectMocks
     private UserDetailsServiceImpl service;
@@ -43,13 +50,11 @@ class UserDetailsServiceImplTest {
         sampleUser.setStatus(true);
     }
 
-    // ─────────────────────────────────────────
-    // loadUserByUsername — thành công
-    // ─────────────────────────────────────────
-
     @Test
     void loadUserByUsername_validEmail_returnsUserDetails() {
-        when(userRepo.findByEmail("patient@clinic.com")).thenReturn(Optional.of(sampleUser));
+        when(userRepo.findByEmailOrPhone("patient@clinic.com", "patient@clinic.com"))
+                .thenReturn(Optional.of(sampleUser));
+        when(patientRepo.findByUser_Email("patient@clinic.com")).thenReturn(Optional.empty());
 
         UserDetails result = service.loadUserByUsername("patient@clinic.com");
 
@@ -64,7 +69,9 @@ class UserDetailsServiceImplTest {
     void loadUserByUsername_doctorRole_hasCorrectAuthority() {
         sampleUser.setEmail("doctor@clinic.com");
         sampleUser.setRole(Role.DOCTOR);
-        when(userRepo.findByEmail("doctor@clinic.com")).thenReturn(Optional.of(sampleUser));
+        when(userRepo.findByEmailOrPhone("doctor@clinic.com", "doctor@clinic.com"))
+                .thenReturn(Optional.of(sampleUser));
+        when(doctorRepo.findByUser_UserId(1)).thenReturn(Optional.empty());
 
         UserDetails result = service.loadUserByUsername("doctor@clinic.com");
 
@@ -76,7 +83,8 @@ class UserDetailsServiceImplTest {
     void loadUserByUsername_adminRole_hasCorrectAuthority() {
         sampleUser.setEmail("admin@clinic.com");
         sampleUser.setRole(Role.ADMIN);
-        when(userRepo.findByEmail("admin@clinic.com")).thenReturn(Optional.of(sampleUser));
+        when(userRepo.findByEmailOrPhone("admin@clinic.com", "admin@clinic.com"))
+                .thenReturn(Optional.of(sampleUser));
 
         UserDetails result = service.loadUserByUsername("admin@clinic.com");
 
@@ -84,13 +92,10 @@ class UserDetailsServiceImplTest {
                 .isEqualTo("ROLE_ADMIN");
     }
 
-    // ─────────────────────────────────────────
-    // loadUserByUsername — thất bại
-    // ─────────────────────────────────────────
-
     @Test
     void loadUserByUsername_emailNotFound_throwsUsernameNotFoundException() {
-        when(userRepo.findByEmail("unknown@clinic.com")).thenReturn(Optional.empty());
+        when(userRepo.findByEmailOrPhone("unknown@clinic.com", "unknown@clinic.com"))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.loadUserByUsername("unknown@clinic.com"))
                 .isInstanceOf(UsernameNotFoundException.class)
@@ -99,10 +104,12 @@ class UserDetailsServiceImplTest {
 
     @Test
     void loadUserByUsername_callsRepositoryExactlyOnce() {
-        when(userRepo.findByEmail(any())).thenReturn(Optional.of(sampleUser));
+        when(userRepo.findByEmailOrPhone("patient@clinic.com", "patient@clinic.com"))
+                .thenReturn(Optional.of(sampleUser));
+        when(patientRepo.findByUser_Email("patient@clinic.com")).thenReturn(Optional.empty());
 
         service.loadUserByUsername("patient@clinic.com");
 
-        verify(userRepo, times(1)).findByEmail("patient@clinic.com");
+        verify(userRepo, times(1)).findByEmailOrPhone("patient@clinic.com", "patient@clinic.com");
     }
 }

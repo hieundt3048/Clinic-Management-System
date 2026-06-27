@@ -9,4 +9,6 @@ import cms.app.Entity.Patient;
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Integer> {
     Optional<Patient> findByUser_Email(String email);
+
+    Optional<Patient> findByUser_UserId(Integer userId);
 }

@@ -118,6 +118,10 @@ public class AuthService implements IAuthService {
         User account = userRepo.findByEmailOrPhone(username, username)
                 .orElseThrow(() -> new ResourceNotFoundException("Tài khoản không tồn tại"));
 
+        if (!account.isStatus()) {
+            throw new IllegalArgumentException("Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+        }
+
         return buildAuthResponse(account);
     }
 
@@ -135,6 +139,10 @@ public class AuthService implements IAuthService {
         }
 
         User account = refreshToken.getUser();
+
+        if (!account.isStatus()) {
+            throw new IllegalArgumentException("Tài khoản đã bị khóa. Vui lòng đăng nhập lại sau khi được mở khóa.");
+        }
 
         // Cấp lại access token mới (không tạo refresh token mới — rotation tùy chọn)
         UserDetails userDetails = userDetailsService.loadUserByUsername(account.getEmail());

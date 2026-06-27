@@ -54,7 +54,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 account.getPasswordHash(),
                 account.getRole(),
                 patientId,
-                doctorId
+                doctorId,
+                account.isStatus()
         );
     }
 }
