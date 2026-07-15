@@ -35,6 +35,10 @@ public class ServiceRequest {
     @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_id")
+    private Invoice clinicalInvoice;
+
     @Column(columnDefinition = "NVARCHAR(500)")
     private String indicationReason;
 
@@ -85,6 +89,14 @@ public class ServiceRequest {
 
     public void setDoctor(Doctor doctor) {
         this.doctor = doctor;
+    }
+
+    public Invoice getClinicalInvoice() {
+        return clinicalInvoice;
+    }
+
+    public void setClinicalInvoice(Invoice clinicalInvoice) {
+        this.clinicalInvoice = clinicalInvoice;
     }
 
     public String getIndicationReason() {

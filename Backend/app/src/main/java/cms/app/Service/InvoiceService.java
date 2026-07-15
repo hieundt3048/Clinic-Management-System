@@ -14,8 +14,11 @@ import cms.app.Dto.PayInvoiceRequest;
 import cms.app.Entity.Appointment;
 import cms.app.Entity.Appointment.AppointmentStatus;
 import cms.app.Entity.Invoice;
+import cms.app.Entity.Invoice.InvoiceType;
 import cms.app.Entity.Invoice.PaymentStatus;
 import cms.app.Entity.Patient;
+import cms.app.Entity.ServiceCatalog;
+import cms.app.Entity.ServiceCatalog.ServiceType;
 import cms.app.Exception.InvalidRequestException;
 import cms.app.Exception.ResourceNotFoundException;
 import cms.app.Repository.AppointmentRepository;
@@ -47,21 +50,33 @@ public class InvoiceService implements IInvoiceService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy lịch hẹn: " + request.getAppointmentId()));
 
-        if (appointment.getStatus() != AppointmentStatus.COMPLETED
-                && appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+        if (appointment.getStatus() != AppointmentStatus.CONFIRMED
+                && appointment.getStatus() != AppointmentStatus.COMPLETED) {
             throw new InvalidRequestException(
-                    "Chỉ được lập hóa đơn cho lịch hẹn đã xác nhận hoặc hoàn thành. Trạng thái hiện tại: "
+                    "Chỉ được lập hóa đơn phí khám cho lịch hẹn đã xác nhận. Trạng thái hiện tại: "
                             + appointment.getStatus());
         }
 
-        if (invoiceRepository.findByAppointment_AppointmentId(appointment.getAppointmentId()).isPresent()) {
-            throw new InvalidRequestException("Lịch hẹn này đã có hóa đơn.");
+        invoiceRepository.findFirstByAppointment_AppointmentIdAndInvoiceType(
+                appointment.getAppointmentId(), InvoiceType.CLINICAL_EXAM)
+                .ifPresent(existing -> {
+                    throw new InvalidRequestException("Lịch hẹn này đã có hóa đơn phí khám.");
+                });
+
+        ServiceCatalog service = appointment.getService();
+        if (service == null) {
+            throw new InvalidRequestException("Lịch hẹn chưa có dịch vụ phí khám. Vui lòng kiểm tra lại dữ liệu đặt lịch.");
+        }
+        if (service.getServiceType() != ServiceType.CONSULTATION) {
+            throw new InvalidRequestException("Dịch vụ gắn với lịch hẹn không phải phí khám lâm sàng.");
         }
 
         Invoice invoice = new Invoice();
         invoice.setPatient(appointment.getPatient());
         invoice.setAppointment(appointment);
-        invoice.setTotalAmount(request.getTotalAmount());
+        invoice.setInvoiceType(InvoiceType.CLINICAL_EXAM);
+        invoice.setDescription("Phí khám lâm sàng - " + service.getServiceName());
+        invoice.setTotalAmount(service.getBasePrice());
         invoice.setStatus(PaymentStatus.UNPAID);
         invoice.setPaymentMethod(null);
         invoice.setPaidAt(null);
@@ -105,12 +120,11 @@ public class InvoiceService implements IInvoiceService {
     @Override
     @Transactional(readOnly = true)
     public List<InvoiceResponse> getAllInvoices() {
-        return invoiceRepository.findAll().stream()
+        return invoiceRepository.findAllByOrderByInvoiceIdDesc().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
-    
     @Override
     @Transactional
     public InvoiceResponse payInvoice(String patientUserEmail, Integer invoiceId, PayInvoiceRequest request) {
@@ -132,12 +146,10 @@ public class InvoiceService implements IInvoiceService {
         String method = request.getPaymentMethod().trim();
 
         if ("CASH".equals(method)) {
-            // Tiền mặt → chờ đến quầy, chưa PAID ngay
             invoice.setStatus(PaymentStatus.PENDING_CASH);
             invoice.setPaymentMethod(method);
-            invoice.setPaidAt(null); // chưa thanh toán thật
+            invoice.setPaidAt(null);
         } else {
-            // Chuyển khoản / Thẻ → PAID luôn
             invoice.setStatus(PaymentStatus.PAID);
             invoice.setPaymentMethod(method);
             invoice.setPaidAt(LocalDateTime.now());
@@ -147,25 +159,31 @@ public class InvoiceService implements IInvoiceService {
         return toResponse(saved);
     }
 
-    // ─── Thêm hàm mới: Admin duyệt thanh toán tiền mặt ──────────────────────────    
     @Override
     @Transactional
     public InvoiceResponse confirmCashPayment(Integer invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hóa đơn: " + invoiceId));
 
-        if (invoice.getStatus() != PaymentStatus.PENDING_CASH) {
+        if (invoice.getStatus() == PaymentStatus.PAID) {
+            throw new InvalidRequestException("Hóa đơn đã được thanh toán.");
+        }
+
+        if (invoice.getStatus() != PaymentStatus.PENDING_CASH
+                && invoice.getStatus() != PaymentStatus.UNPAID) {
             throw new InvalidRequestException(
-                    "Chỉ duyệt được hóa đơn đang chờ thanh toán tiền mặt. Trạng thái hiện tại: "
+                    "Chỉ xác nhận thu tiền cho hóa đơn chưa thanh toán hoặc đang chờ tại quầy. Trạng thái hiện tại: "
                     + invoice.getStatus());
         }
 
         invoice.setStatus(PaymentStatus.PAID);
+        invoice.setPaymentMethod("CASH");
         invoice.setPaidAt(LocalDateTime.now());
 
         Invoice saved = invoiceRepository.save(invoice);
         return toResponse(saved);
     }
+
     private boolean isAdmin(Iterable<? extends GrantedAuthority> authorities) {
         for (GrantedAuthority a : authorities) {
             if (ROLE_ADMIN.equals(a.getAuthority())) {
@@ -181,6 +199,8 @@ public class InvoiceService implements IInvoiceService {
         r.setInvoiceId(invoice.getInvoiceId());
         r.setPatientId(invoice.getPatient().getPatientId());
         r.setAppointmentId(a.getAppointmentId());
+        r.setInvoiceType(invoice.getInvoiceType());
+        r.setDescription(invoice.getDescription());
         r.setAppointmentDate(a.getAppointmentDate());
         r.setDoctorName(a.getDoctor().getFullName());
         r.setSpecialtyName(a.getSpecialty().getSpecialtyName());

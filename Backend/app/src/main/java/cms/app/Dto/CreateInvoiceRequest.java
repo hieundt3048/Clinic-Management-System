@@ -1,19 +1,15 @@
 package cms.app.Dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 /**
- * Tạo hóa đơn sau khám.
+ * Admin tạo hóa đơn phí khám lâm sàng cho một lịch hẹn.
+ * Tổng tiền được hệ thống lấy từ dịch vụ khám bệnh nhân đã chọn khi đặt lịch.
  */
 public class CreateInvoiceRequest {
 
     @NotNull(message = "Mã lịch hẹn không được để trống")
     private Integer appointmentId;
-
-    @NotNull(message = "Tổng tiền không được để trống")
-    @Positive(message = "Tổng tiền phải lớn hơn 0")
-    private Double totalAmount;
 
     public Integer getAppointmentId() {
         return appointmentId;
@@ -21,13 +17,5 @@ public class CreateInvoiceRequest {
 
     public void setAppointmentId(Integer appointmentId) {
         this.appointmentId = appointmentId;
-    }
-
-    public Double getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(Double totalAmount) {
-        this.totalAmount = totalAmount;
     }
 }

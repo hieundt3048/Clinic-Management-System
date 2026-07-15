@@ -1,12 +1,20 @@
 .vscode/
 Backend/app/src/main/java/cms/app/Config/AdminSeeder.java
 Backend/app/.env
-# Bỏ qua tất cả mọi thứ trong thư mục lớn
+
+# Ignore everything by default in this workspace
 *
 Backend/app/target/
-# Nhớ giữ lại file .gitignore này để cấu hình không bị mất
-!.gitignore
 
-# Bắt Git phải track 2 thư mục FE và BE
+# Keep selected project paths visible to Git
+!.gitignore
 !FE/
 !Backend/
+!Backend/app/
+!Backend/app/src/
+!Backend/app/src/main/
+!Backend/app/src/main/resources/
+
+# Local secret configuration - never commit real credentials
+Backend/app/src/main/resources/application.properties
+!Backend/app/src/main/resources/application.properties.example

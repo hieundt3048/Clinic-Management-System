@@ -2,6 +2,7 @@ package cms.app.Dto;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -17,6 +18,7 @@ public class CreateServiceRequestDto {
     @NotNull(message = "doctorId không được để trống")
     private Integer doctorId;
 
+    @Valid
     @NotEmpty(message = "Phải chỉ định ít nhất 1 dịch vụ")
     private List<ServiceItemDto> services;
 

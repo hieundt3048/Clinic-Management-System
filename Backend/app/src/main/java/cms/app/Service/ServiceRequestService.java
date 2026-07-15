@@ -12,12 +12,18 @@ import cms.app.Dto.CreateServiceRequestDto.ServiceItemDto;
 import cms.app.Dto.ServiceRequestResponse;
 import cms.app.Dto.UpdateServiceResultDto;
 import cms.app.Entity.Doctor;
+import cms.app.Entity.Invoice;
+import cms.app.Entity.Invoice.InvoiceType;
+import cms.app.Entity.Invoice.PaymentStatus;
 import cms.app.Entity.MedicalRecord;
 import cms.app.Entity.ServiceCatalog;
+import cms.app.Entity.ServiceCatalog.ServiceType;
 import cms.app.Entity.ServiceRequest;
 import cms.app.Entity.ServiceRequest.RequestStatus;
+import cms.app.Exception.InvalidRequestException;
 import cms.app.Exception.ResourceNotFoundException;
 import cms.app.Repository.DoctorRepository;
+import cms.app.Repository.InvoiceRepository;
 import cms.app.Repository.MedicalRecordRepository;
 import cms.app.Repository.ServiceCatalogRepository;
 import cms.app.Repository.ServiceRequestRepository;
@@ -29,18 +35,20 @@ public class ServiceRequestService implements IServiceRequestService {
     private final ServiceCatalogRepository serviceCatalogRepo;
     private final MedicalRecordRepository medicalRecordRepo;
     private final DoctorRepository doctorRepo;
+    private final InvoiceRepository invoiceRepository;
 
     public ServiceRequestService(ServiceRequestRepository serviceRequestRepo,
                                   ServiceCatalogRepository serviceCatalogRepo,
                                   MedicalRecordRepository medicalRecordRepo,
-                                  DoctorRepository doctorRepo) {
+                                  DoctorRepository doctorRepo,
+                                  InvoiceRepository invoiceRepository) {
         this.serviceRequestRepo = serviceRequestRepo;
         this.serviceCatalogRepo = serviceCatalogRepo;
         this.medicalRecordRepo  = medicalRecordRepo;
         this.doctorRepo         = doctorRepo;
+        this.invoiceRepository  = invoiceRepository;
     }
 
-    // Tạo chỉ định
     @Override
     @Transactional
     public List<ServiceRequestResponse> createRequests(CreateServiceRequestDto request) {
@@ -52,16 +60,17 @@ public class ServiceRequestService implements IServiceRequestService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy bác sĩ ID: " + request.getDoctorId()));
 
-        // Mỗi dịch vụ → 1 ServiceRequest riêng
-        List<ServiceRequest> saved = request.getServices().stream()
+        List<ServiceRequest> requests = request.getServices().stream()
                 .map(item -> createSingleRequest(record, doctor, item))
-                .map(serviceRequestRepo::save)
                 .collect(Collectors.toList());
 
+        Invoice invoice = createClinicalServiceInvoice(record, requests);
+        requests.forEach(sr -> sr.setClinicalInvoice(invoice));
+
+        List<ServiceRequest> saved = serviceRequestRepo.saveAll(requests);
         return saved.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Truy vấn
     @Override
     @Transactional(readOnly = true)
     public ServiceRequestResponse getById(Integer requestId) {
@@ -92,22 +101,21 @@ public class ServiceRequestService implements IServiceRequestService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Cập nhật kết quả
     @Override
     @Transactional
     public ServiceRequestResponse updateResult(Integer requestId, UpdateServiceResultDto dto) {
         ServiceRequest sr = findById(requestId);
 
-        // Không cho cập nhật nếu đã CANCELLED
         if (sr.getStatus() == RequestStatus.CANCELLED) {
             throw new IllegalStateException("Không thể cập nhật chỉ định đã hủy");
         }
+
+        ensureClinicalInvoicePaid(sr);
 
         sr.setStatus(dto.getStatus());
         sr.setResultSummary(dto.getResultSummary());
         sr.setResultImages(dto.getResultImages());
 
-        // Tự động ghi nhận thời điểm hoàn thành
         if (dto.getStatus() == RequestStatus.COMPLETED) {
             sr.setPerformedAt(LocalDateTime.now());
         }
@@ -116,7 +124,6 @@ public class ServiceRequestService implements IServiceRequestService {
         return toResponse(sr);
     }
 
-    // Hủy chỉ định
     @Override
     @Transactional
     public ServiceRequestResponse cancelRequest(Integer requestId) {
@@ -133,13 +140,16 @@ public class ServiceRequestService implements IServiceRequestService {
         return toResponse(sr);
     }
 
-    // Private helpers
     private ServiceRequest createSingleRequest(MedicalRecord record,
                                                 Doctor doctor,
                                                 ServiceItemDto item) {
         ServiceCatalog catalog = serviceCatalogRepo.findById(item.getServiceId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy dịch vụ ID: " + item.getServiceId()));
+
+        if (catalog.getServiceType() != ServiceType.CLINICAL) {
+            throw new InvalidRequestException("Chỉ được chỉ định dịch vụ cận lâm sàng trong phiếu CLS.");
+        }
 
         ServiceRequest sr = new ServiceRequest();
         sr.setMedicalRecord(record);
@@ -149,6 +159,38 @@ public class ServiceRequestService implements IServiceRequestService {
         sr.setStatus(RequestStatus.PENDING);
         sr.setCreatedAt(LocalDateTime.now());
         return sr;
+    }
+
+    private Invoice createClinicalServiceInvoice(MedicalRecord record, List<ServiceRequest> requests) {
+        double total = requests.stream()
+                .map(ServiceRequest::getServiceCatalog)
+                .mapToDouble(ServiceCatalog::getBasePrice)
+                .sum();
+
+        String serviceSummary = requests.stream()
+                .map(sr -> sr.getServiceCatalog().getServiceName())
+                .distinct()
+                .collect(Collectors.joining(" + "));
+
+        Invoice invoice = new Invoice();
+        invoice.setPatient(record.getPatient());
+        invoice.setAppointment(record.getAppointment());
+        invoice.setInvoiceType(InvoiceType.CLINICAL_SERVICE);
+        invoice.setDescription("Dịch vụ cận lâm sàng: " + serviceSummary);
+        invoice.setTotalAmount(total);
+        invoice.setStatus(PaymentStatus.UNPAID);
+        invoice.setPaymentMethod(null);
+        invoice.setPaidAt(null);
+        return invoiceRepository.save(invoice);
+    }
+
+    private void ensureClinicalInvoicePaid(ServiceRequest sr) {
+        Invoice invoice = sr.getClinicalInvoice();
+        if (invoice != null && invoice.getStatus() != PaymentStatus.PAID) {
+            throw new InvalidRequestException(
+                    "Chỉ được cập nhật/thực hiện cận lâm sàng sau khi bệnh nhân thanh toán hóa đơn CLS #"
+                            + invoice.getInvoiceId());
+        }
     }
 
     private ServiceRequest findById(Integer id) {
@@ -168,6 +210,10 @@ public class ServiceRequestService implements IServiceRequestService {
         r.setServiceId(sr.getServiceCatalog().getServiceId());
         r.setServiceName(sr.getServiceCatalog().getServiceName());
         r.setBasePrice(sr.getServiceCatalog().getBasePrice());
+        if (sr.getClinicalInvoice() != null) {
+            r.setInvoiceId(sr.getClinicalInvoice().getInvoiceId());
+            r.setInvoiceStatus(sr.getClinicalInvoice().getStatus());
+        }
         r.setIndicationReason(sr.getIndicationReason());
         r.setStatus(sr.getStatus());
         r.setCreatedAt(sr.getCreatedAt());

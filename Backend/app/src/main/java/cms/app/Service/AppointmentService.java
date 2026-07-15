@@ -12,6 +12,7 @@ import cms.app.Entity.Appointment.AppointmentStatus;
 import cms.app.Entity.Doctor;
 import cms.app.Entity.Patient;
 import cms.app.Entity.ServiceCatalog;
+import cms.app.Entity.ServiceCatalog.ServiceType;
 import cms.app.Entity.Specialty;
 import cms.app.Exception.BusinessLogicException;
 import cms.app.Exception.ResourceNotFoundException;
@@ -76,12 +77,9 @@ public class AppointmentService implements IAppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy chuyên khoa với ID: " + request.getSpecialtyId()));
 
-        // 1b. Tìm dịch vụ nếu BN có chọn (optional)
-        ServiceCatalog service = null;
-        if (request.getServiceId() != null) {
-            service = serviceCatalogRepo.findById(request.getServiceId())
-                    .orElse(null);
-        }
+        // 1b. Gắn phí khám lâm sàng cho lịch hẹn.
+        // CLS không được gắn ở bước đặt lịch; CLS chỉ do bác sĩ chỉ định sau khi khám.
+        ServiceCatalog service = resolveConsultationService(request.getServiceId());
 
         // 2. Kiểm tra thời gian
         if (request.getAppointmentDate().isBefore(LocalDateTime.now()))
@@ -150,6 +148,24 @@ public class AppointmentService implements IAppointmentService {
         appointmentRepo.save(appointment);
     }
 
+    private ServiceCatalog resolveConsultationService(Integer serviceId) {
+        ServiceCatalog service;
+        if (serviceId != null) {
+            service = serviceCatalogRepo.findById(serviceId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dịch vụ khám ID: " + serviceId));
+        } else {
+            service = serviceCatalogRepo.findFirstByServiceNameIgnoreCase("Khám chuyên khoa")
+                    .orElseGet(() -> serviceCatalogRepo.findByServiceType(ServiceType.CONSULTATION)
+                            .stream()
+                            .findFirst()
+                            .orElseThrow(() -> new BusinessLogicException("Chưa cấu hình dịch vụ phí khám lâm sàng.")));
+        }
+
+        if (service.getServiceType() != ServiceType.CONSULTATION) {
+            throw new BusinessLogicException("Lịch hẹn chỉ được gắn phí khám lâm sàng, không được chọn dịch vụ cận lâm sàng.");
+        }
+        return service;
+    }
     private AppointmentResponseDTO toResponse(Appointment a) {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();
         dto.setAppointmentId(a.getAppointmentId());

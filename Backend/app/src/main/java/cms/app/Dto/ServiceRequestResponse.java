@@ -1,6 +1,7 @@
 package cms.app.Dto;
 
 import cms.app.Entity.ServiceRequest.RequestStatus;
+import cms.app.Entity.Invoice;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +25,10 @@ public class ServiceRequestResponse {
     private Integer serviceId;
     private String serviceName;
     private Double basePrice;
+
+    // Hóa đơn CLS tự sinh khi bác sĩ chỉ định
+    private Integer invoiceId;
+    private Invoice.PaymentStatus invoiceStatus;
 
     // Chỉ định
     private String indicationReason;
@@ -65,6 +70,12 @@ public class ServiceRequestResponse {
 
     public Double getBasePrice() { return basePrice; }
     public void setBasePrice(Double basePrice) { this.basePrice = basePrice; }
+
+    public Integer getInvoiceId() { return invoiceId; }
+    public void setInvoiceId(Integer invoiceId) { this.invoiceId = invoiceId; }
+
+    public Invoice.PaymentStatus getInvoiceStatus() { return invoiceStatus; }
+    public void setInvoiceStatus(Invoice.PaymentStatus invoiceStatus) { this.invoiceStatus = invoiceStatus; }
 
     public String getIndicationReason() { return indicationReason; }
     public void setIndicationReason(String indicationReason) { this.indicationReason = indicationReason; }

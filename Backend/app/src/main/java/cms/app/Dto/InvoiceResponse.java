@@ -2,6 +2,7 @@ package cms.app.Dto;
 
 import java.time.LocalDateTime;
 
+import cms.app.Entity.Invoice;
 import cms.app.Entity.Invoice.PaymentStatus;
 
 public class InvoiceResponse {
@@ -9,6 +10,8 @@ public class InvoiceResponse {
     private Integer invoiceId;
     private Integer patientId;
     private Integer appointmentId;
+    private Invoice.InvoiceType invoiceType;
+    private String description;
     private LocalDateTime appointmentDate;
     private String doctorName;
     private String specialtyName;
@@ -40,6 +43,12 @@ public class InvoiceResponse {
     public void setAppointmentId(Integer appointmentId) {
         this.appointmentId = appointmentId;
     }
+
+    public Invoice.InvoiceType getInvoiceType() { return invoiceType; }
+    public void setInvoiceType(Invoice.InvoiceType invoiceType) { this.invoiceType = invoiceType; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public LocalDateTime getAppointmentDate() {
         return appointmentDate;

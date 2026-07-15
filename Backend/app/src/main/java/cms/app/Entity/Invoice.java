@@ -12,7 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
@@ -29,9 +28,13 @@ public class Invoice {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "appointment_id", nullable = false)
     private Appointment appointment;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private InvoiceType invoiceType = InvoiceType.CLINICAL_EXAM;
 
     @Column(nullable = false)
     private Double totalAmount;
@@ -44,6 +47,11 @@ public class Invoice {
     UNPAID, PENDING_CASH, PAID
     }
 
+    public enum InvoiceType {
+        CLINICAL_EXAM,
+        CLINICAL_SERVICE
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -51,6 +59,9 @@ public class Invoice {
 
     @Column(columnDefinition = "NVARCHAR(50)")
     private String paymentMethod;
+
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String description;
 
     /** Chỉ có giá trị khi status = PAID */
     @Column(nullable = true)
@@ -83,6 +94,14 @@ public class Invoice {
         this.appointment = appointment;
     }
 
+    public InvoiceType getInvoiceType() {
+        return invoiceType;
+    }
+
+    public void setInvoiceType(InvoiceType invoiceType) {
+        this.invoiceType = invoiceType;
+    }
+
     public Double getTotalAmount() {
         return totalAmount;
     }
@@ -105,6 +124,14 @@ public class Invoice {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public LocalDateTime getPaidAt() {

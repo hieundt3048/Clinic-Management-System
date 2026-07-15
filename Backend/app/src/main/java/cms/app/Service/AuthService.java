@@ -2,6 +2,8 @@ package cms.app.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -96,7 +98,7 @@ public class AuthService implements IAuthService {
         profile.setFullName(request.getFullName());
         profile.setUser(account);
         if (request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty()) {
-            profile.setDateOfBirth(LocalDate.parse(request.getDateOfBirth()));
+            profile.setDateOfBirth(parseDateOfBirth(request.getDateOfBirth()));
         }
         profile.setGender(request.getGender());
         patientRepo.save(profile);
@@ -147,14 +149,15 @@ public class AuthService implements IAuthService {
         // Cấp lại access token mới (không tạo refresh token mới — rotation tùy chọn)
         UserDetails userDetails = userDetailsService.loadUserByUsername(account.getEmail());
         String newAccessToken = jwtService.generateToken(userDetails, account.getRole().name(), account.getUserId());
-
-        return new AuthResponse(
+        AuthResponse response = new AuthResponse(
                 newAccessToken,
                 refreshToken.getToken(),  // giữ nguyên refresh token cũ
                 account.getUserId(),
                 account.getEmail(),
                 account.getRole().name()
         );
+        attachProfileIds(response, account);
+        return response;
     }
 
     // Logout
@@ -228,16 +231,44 @@ public class AuthService implements IAuthService {
                 userDetails, account.getRole().name(), account.getUserId());
 
         String refreshToken = createRefreshToken(account);
-
-        return new AuthResponse(
+        AuthResponse response = new AuthResponse(
                 accessToken,
                 refreshToken,
                 account.getUserId(),
                 account.getEmail(),
                 account.getRole().name()
         );
+        attachProfileIds(response, account);
+        return response;
     }
 
+    private LocalDate parseDateOfBirth(String value) {
+        String trimmed = value == null ? "" : value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return LocalDate.parse(trimmed);
+        } catch (DateTimeParseException ignored) {
+            // Accept the format shown in the Vietnamese registration form.
+        }
+
+        try {
+            return LocalDate.parse(trimmed, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } catch (DateTimeParseException ignored) {
+            throw new IllegalArgumentException("Ngày sinh không hợp lệ. Vui lòng nhập theo định dạng yyyy-MM-dd hoặc dd/MM/yyyy.");
+        }
+    }
+    private void attachProfileIds(AuthResponse response, User account) {
+        if (account.getRole() == User.Role.PATIENT) {
+            patientRepo.findByUser_UserId(account.getUserId())
+                    .ifPresent(patient -> response.setPatientId(patient.getPatientId()));
+        } else if (account.getRole() == User.Role.DOCTOR) {
+            doctorRepo.findByUser_UserId(account.getUserId())
+                    .ifPresent(doctor -> response.setDoctorId(doctor.getDoctorId()));
+        }
+    }
     /** Tạo Refresh Token mới, lưu DB, xóa token cũ (rotation) */
     private String createRefreshToken(User account) {
         // Xóa token cũ trước
