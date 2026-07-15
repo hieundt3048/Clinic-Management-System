@@ -26,6 +26,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const PAYMENT_LABEL = { CASH:'Tiền mặt', BANK_TRANSFER:'Chuyển khoản', CARD:'Thẻ' };
+const INVOICE_TYPE_LABEL = { CLINICAL_EXAM: 'Phí khám', CLINICAL_SERVICE: 'Dịch vụ CLS' };
 
 const FILTER_OPTIONS = [
   { value: '',             label: 'Tất cả' },
@@ -57,14 +58,14 @@ const AdminInvoicesPage = () => {
   }, []);
 
   const handleConfirmCash = async (invoiceId) => {
-    if (!window.confirm('Xác nhận bệnh nhân đã nộp tiền mặt tại quầy?')) return;
+    if (!window.confirm('Xác nhận đã thu tiền tại quầy cho hóa đơn này?')) return;
     setConfirming(invoiceId);
     try {
       // PATCH /api/invoices/{id}/confirm-cash
       const updated = await confirmCashPayment(invoiceId);
       setInvoices(prev => prev.map(i => i.invoiceId === invoiceId ? updated : i));
     } catch (e) {
-      alert(e.response?.data?.message || 'Duyệt thất bại.');
+      alert(e.response?.data?.message || 'Xác nhận thu tiền thất bại.');
     } finally { setConfirming(null); }
   };
 
@@ -75,6 +76,7 @@ const AdminInvoicesPage = () => {
       const matchSearch = !q ||
         inv.doctorName?.toLowerCase().includes(q) ||
         inv.specialtyName?.toLowerCase().includes(q) ||
+        inv.description?.toLowerCase().includes(q) ||
         String(inv.invoiceId).includes(q) ||
         String(inv.patientId).includes(q);
       return matchStatus && matchSearch;
@@ -143,6 +145,7 @@ const AdminInvoicesPage = () => {
                   <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                     <th className="px-4 py-3 font-semibold">Mã HĐ</th>
                     <th className="px-4 py-3 font-semibold">Mã BN</th>
+                    <th className="px-4 py-3 font-semibold">Loại</th>
                     <th className="px-4 py-3 font-semibold">Bác sĩ</th>
                     <th className="px-4 py-3 font-semibold">Chuyên khoa</th>
                     <th className="px-4 py-3 font-semibold">Ngày khám</th>
@@ -150,19 +153,25 @@ const AdminInvoicesPage = () => {
                     <th className="px-4 py-3 font-semibold">Trạng thái</th>
                     <th className="px-4 py-3 font-semibold">PT thanh toán</th>
                     <th className="px-4 py-3 font-semibold">Thanh toán lúc</th>
-                    <th className="px-4 py-3 font-semibold">Duyệt</th>
+                    <th className="px-4 py-3 font-semibold">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={9} className="text-center py-12 text-gray-400 text-sm">
+                    <tr><td colSpan={11} className="text-center py-12 text-gray-400 text-sm">
                       <DocumentTextIcon className="h-10 w-10 mx-auto text-gray-200 mb-2" />
                       Không có hóa đơn nào
                     </td></tr>
                   ) : filtered.map(inv => (
                     <tr key={inv.invoiceId} className="hover:bg-gray-50 transition text-sm">
                       <td className="px-4 py-3 font-semibold text-gray-700">#{inv.invoiceId}</td>
-                      <td className="px-4 py-3 text-gray-500">{inv.patientId}</td>
+                                            <td className="px-4 py-3 text-gray-500">{inv.patientId}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${inv.invoiceType === 'CLINICAL_SERVICE' ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
+                          {INVOICE_TYPE_LABEL[inv.invoiceType] || 'Hóa đơn'}
+                        </span>
+                        {inv.description && <p className="mt-1 max-w-[180px] truncate text-xs text-gray-400">{inv.description}</p>}
+                      </td>
                       <td className="px-4 py-3 text-gray-700">BS. {inv.doctorName}</td>
                       <td className="px-4 py-3 text-gray-500">{inv.specialtyName}</td>
                       <td className="px-4 py-3 text-gray-500">
@@ -189,7 +198,7 @@ const AdminInvoicesPage = () => {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        {inv.status === 'PENDING_CASH' && (
+                        {(inv.status === 'UNPAID' || inv.status === 'PENDING_CASH') && (
                           <button
                             onClick={() => handleConfirmCash(inv.invoiceId)}
                             disabled={confirming === inv.invoiceId}
@@ -198,7 +207,7 @@ const AdminInvoicesPage = () => {
                             {confirming === inv.invoiceId
                               ? <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
                               : <CheckCircleIcon className="h-3.5 w-3.5" />}
-                            Duyệt
+                            {inv.status === 'UNPAID' ? 'Thu tiền' : 'Duyệt'}
                           </button>
                         )}
                       </td>

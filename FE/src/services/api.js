@@ -27,6 +27,8 @@ export const loginUser = (credentials) => {
 export function mapAuthResponse(data) {
   return {
     userId: data.userId,
+    patientId: data.patientId,
+    doctorId: data.doctorId,
     email: data.email,
     role: data.role,
     name: data.email,
@@ -245,6 +247,10 @@ export const getServiceRequestsByStatus = (status) =>
 // PATCH /api/service-requests/{id}/cancel
 export const cancelServiceRequest = (requestId) =>
   apiClient.patch(`/service-requests/${requestId}/cancel`).then((r) => r.data);
+
+// PATCH /api/service-requests/{id}/result -> Doctor/Admin updates clinical result/status
+export const updateServiceRequestResult = (requestId, payload) =>
+  apiClient.patch(`/service-requests/${requestId}/result`, payload).then((r) => r.data);
 // PUT /api/medical-records/{recordId} → Doctor updates diagnosis/treatment/follow-up
 export const updateMedicalRecord = (recordId, payload) =>
   apiClient.put(`/medical-records/${recordId}`, payload).then((r) => r.data.data);

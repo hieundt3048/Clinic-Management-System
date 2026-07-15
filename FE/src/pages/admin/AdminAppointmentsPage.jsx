@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AdminLayout from './AdminLayout';
-import { getAllAppointments, adminCreateInvoice, getExamServices, updateAppointmentStatus } from '../../services/api';
+import { getAllAppointments, adminCreateInvoice, updateAppointmentStatus } from '../../services/api';
 import {
   CalendarDaysIcon, ClockIcon, MagnifyingGlassIcon,
   FunnelIcon, ArrowPathIcon, ExclamationCircleIcon, CheckCircleIcon,
@@ -39,50 +39,38 @@ const NEXT_STATUS = {
 
 // ─── Invoice Modal ─────────────────────────────────────────────────────────────
 
-const InvoiceModal = ({ appt, services, onCreated, onClose }) => {
-  // Ưu tiên dùng dịch vụ BN đã đăng ký (từ BE), fallback về catalog
-  const preselectedId = appt.serviceId
-    || services.find(s =>
-        s.serviceName?.toLowerCase().includes('tiêu chuẩn') ||
-        s.serviceName?.toLowerCase().includes('chuyên khoa')
-      )?.serviceId
-    || services[0]?.serviceId
-    || '';
-
-  const [selectedServiceId, setSelectedServiceId] = useState(preselectedId);
-  const [customAmount, setCustomAmount] = useState('');
+const InvoiceModal = ({ appt, onCreated, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Nếu BE đã trả servicePrice → dùng luôn, không cần chọn lại
-  const presetPrice = appt.servicePrice || null;
-  const selectedService = services.find(s => s.serviceId === Number(selectedServiceId));
-  const finalAmount = customAmount
-    ? Number(customAmount)
-    : (presetPrice || selectedService?.basePrice || 0);
+  const serviceName = appt.serviceName || 'Phí khám lâm sàng';
+  const amount = appt.servicePrice || 0;
 
   const handleSubmit = async () => {
-    if (!finalAmount || finalAmount <= 0) { setError('Vui lòng chọn dịch vụ hoặc nhập số tiền'); return; }
+    if (!amount || amount <= 0) {
+      setError('Lịch hẹn này chưa có đơn giá phí khám. Vui lòng kiểm tra lại dữ liệu đặt lịch.');
+      return;
+    }
     setSaving(true); setError('');
     try {
-      await adminCreateInvoice({ appointmentId: appt.appointmentId, totalAmount: finalAmount });
-      // Tự động đánh dấu COMPLETED sau khi tạo HĐ
-      try { await updateAppointmentStatus(appt.appointmentId, 'COMPLETED'); } catch(_) {}
-      onCreated('COMPLETED');
+      await adminCreateInvoice({ appointmentId: appt.appointmentId });
+      onCreated();
     } catch (e) {
-      setError(e.response?.data?.message || 'Tạo hóa đơn thất bại.');
+      setError(e.response?.data?.message || 'Tạo hóa đơn phí khám thất bại.');
     } finally { setSaving(false); }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900">Tạo hóa đơn</h3>
-          <button onClick={onClose}><XMarkIcon className="h-5 w-5 text-gray-400" /></button>
+          <div>
+            <h3 className="font-bold text-gray-900">Tạo hóa đơn phí khám</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Chỉ thu phí khám lâm sàng, không thu dịch vụ cận lâm sàng tại bước này</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100"><XMarkIcon className="h-5 w-5 text-gray-400" /></button>
         </div>
         <div className="px-5 py-4 space-y-4">
-          {/* Thông tin lịch hẹn */}
           <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1.5">
             <p className="font-semibold text-gray-700 mb-1">Lịch hẹn #{appt.appointmentId}</p>
             <div className="flex items-center gap-2 text-gray-600">
@@ -96,7 +84,7 @@ const InvoiceModal = ({ appt, services, onCreated, onClose }) => {
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <CalendarDaysIcon className="h-3.5 w-3.5 text-gray-400" />
-              BS. {appt.doctorName} — {appt.specialtyName}
+              BS. {appt.doctorName} - {appt.specialtyName}
             </div>
             <div className="flex items-center gap-2 text-gray-500">
               <ClockIcon className="h-3.5 w-3.5 text-gray-400" />
@@ -104,49 +92,15 @@ const InvoiceModal = ({ appt, services, onCreated, onClose }) => {
             </div>
           </div>
 
-          {/* Chọn dịch vụ */}
-          {services.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dịch vụ khám</label>
-              <div className="space-y-2">
-                {services.map(s => (
-                  <button key={s.serviceId} onClick={() => { setSelectedServiceId(s.serviceId); setCustomAmount(''); }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border-2 text-sm transition ${
-                      selectedServiceId === s.serviceId
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}>
-                    <span className={`font-medium ${selectedServiceId === s.serviceId ? 'text-blue-700' : 'text-gray-700'}`}>
-                      {s.serviceName}
-                    </span>
-                    <span className={`font-bold ${selectedServiceId === s.serviceId ? 'text-blue-600' : 'text-gray-600'}`}>
-                      {fmtCurrency(s.basePrice)}
-                    </span>
-                  </button>
-                ))}
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Khoản thu</p>
+            <div className="mt-2 flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold text-blue-900">{serviceName}</p>
+                <p className="mt-1 text-xs text-blue-600">Dịch vụ cận lâm sàng sẽ do bác sĩ chỉ định và hệ thống tự tạo hóa đơn riêng.</p>
               </div>
+              <p className="shrink-0 text-lg font-bold text-blue-700">{fmtCurrency(amount)}</p>
             </div>
-          )}
-
-          {/* Tuỳ chỉnh số tiền */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Hoặc nhập số tiền khác (tuỳ chỉnh)
-            </label>
-            <input
-              type="number"
-              value={customAmount}
-              onChange={e => { setCustomAmount(e.target.value); setSelectedServiceId(''); }}
-              placeholder="Nhập số tiền..."
-              min="0"
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Tổng tiền */}
-          <div className="bg-blue-50 rounded-lg px-4 py-3 flex items-center justify-between border border-blue-100">
-            <span className="text-sm font-semibold text-blue-700">Tổng tiền hóa đơn</span>
-            <span className="text-xl font-bold text-blue-700">{fmtCurrency(finalAmount)}</span>
           </div>
 
           {error && (
@@ -156,10 +110,10 @@ const InvoiceModal = ({ appt, services, onCreated, onClose }) => {
           )}
         </div>
         <div className="flex gap-3 px-5 py-4 border-t border-gray-100">
-          <button onClick={handleSubmit} disabled={saving || !finalAmount}
+          <button onClick={handleSubmit} disabled={saving || !amount}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 transition">
             {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <CheckCircleIcon className="h-4 w-4" />}
-            {saving ? 'Đang tạo...' : `Tạo hóa đơn ${finalAmount ? fmtCurrency(finalAmount) : ''}`}
+            {saving ? 'Đang tạo...' : 'Tạo hóa đơn phí khám'}
           </button>
           <button onClick={onClose} className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-xl hover:bg-gray-50 transition">Hủy</button>
         </div>
@@ -223,7 +177,7 @@ const AppointmentRow = ({ appt, onStatusChange, onCreateInvoice, updating }) => 
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition"
               >
                 <CurrencyDollarIcon className="h-3.5 w-3.5" />
-                Tạo HĐ
+                Tạo HĐ khám
               </button>
             )}
           </div>
@@ -269,7 +223,6 @@ const FILTER_OPTIONS = [
 
 const AdminAppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);
-  const [services, setServices]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
   const [search, setSearch]             = useState('');
@@ -287,14 +240,8 @@ const AdminAppointmentsPage = () => {
     const load = async () => {
       setLoading(true); setError('');
       try {
-        const [apptData, svcData] = await Promise.allSettled([
-          getAllAppointments(),
-          getExamServices(),
-        ]);
-        if (apptData.status === 'fulfilled')
-          setAppointments(Array.isArray(apptData.value) ? apptData.value : []);
-        if (svcData.status === 'fulfilled')
-          setServices(Array.isArray(svcData.value) ? svcData.value : []);
+        const apptData = await getAllAppointments();
+        setAppointments(Array.isArray(apptData) ? apptData : []);
       } catch (e) {
         setError(e.response?.data?.message || 'Không thể tải dữ liệu.');
       } finally { setLoading(false); }
@@ -443,7 +390,6 @@ const AdminAppointmentsPage = () => {
       {invoiceTarget && (
         <InvoiceModal
           appt={invoiceTarget}
-          services={services}
           onCreated={(newStatus) => {
             if (newStatus) {
               setAppointments(prev => prev.map(a =>

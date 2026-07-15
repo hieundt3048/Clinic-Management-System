@@ -63,6 +63,7 @@ const STATUS = {
   PAID:         { label: 'Đã thanh toán',             color: 'bg-green-100 text-green-700 border-green-200',   dot: 'bg-green-500'  },
 };
 const getStatus = (key) => STATUS[key] || STATUS.UNPAID;
+const INVOICE_TYPE_LABEL = { CLINICAL_EXAM: 'Phí khám', CLINICAL_SERVICE: 'Dịch vụ cận lâm sàng' };
 
 const StatusBadge = ({ status }) => {
   const cfg = getStatus(status);
@@ -383,10 +384,13 @@ const InvoiceCard = ({ invoice, onPay }) => (
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Hóa đơn #{invoice.invoiceId}</p>
-              <StatusBadge status={invoice.status} />
+                            <StatusBadge status={invoice.status} />
+              <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${invoice.invoiceType === 'CLINICAL_SERVICE' ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100'}`}>
+                {INVOICE_TYPE_LABEL[invoice.invoiceType] || 'Hóa đơn'}
+              </span>
             </div>
             <p className="text-base font-bold text-gray-900">BS. {invoice.doctorName}</p>
-            <p className="text-sm text-blue-600 font-medium">{invoice.specialtyName}</p>
+            <p className="text-sm text-blue-600 font-medium">{invoice.description || invoice.specialtyName}</p>
             <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-gray-500">
               <span className="flex items-center gap-1">
                 <CalendarDaysIcon className="h-3.5 w-3.5" />
@@ -482,6 +486,7 @@ const BillingPage = () => {
       const matchSearch = !q ||
         inv.doctorName?.toLowerCase().includes(q) ||
         inv.specialtyName?.toLowerCase().includes(q) ||
+        inv.description?.toLowerCase().includes(q) ||
         String(inv.invoiceId).includes(q);
       return matchStatus && matchSearch;
     });

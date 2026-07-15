@@ -33,6 +33,18 @@ import './App.css';
 
 const NO_SIDEBAR_PATHS = ['/login', '/register'];
 
+const defaultPathForRole = (role) => {
+  if (role === 'ADMIN') return '/admin';
+  if (role === 'DOCTOR') return '/doctor';
+  return '/';
+};
+
+const RoleRoute = ({ user, roles, children }) => {
+  if (!roles.includes(user?.role)) {
+    return <Navigate to={defaultPathForRole(user?.role)} replace />;
+  }
+  return children;
+};
 const Layout = ({ user, loading, children }) => {
   const location = useLocation();
   const isAdminPath  = location.pathname.startsWith('/admin');
@@ -95,22 +107,22 @@ function App() {
                 <>
                   <Route path="/"               element={<HomePage />} />
                   <Route path="/user-profile"   element={<UserProfilePage />} />
-                  <Route path="/billing"        element={<BillingPage />} />
+                  <Route path="/billing"        element={<RoleRoute user={user} roles={['PATIENT']}><BillingPage /></RoleRoute>} />
 
                   {/* Admin */}
-                  <Route path="/admin"              element={<AdminRevenuePage />} />
-                  <Route path="/admin/appointments" element={<AdminAppointmentsPage />} />
-                  <Route path="/admin/invoices"     element={<AdminInvoicesPage />} />
-                  <Route path="/admin/staff"        element={<AdminStaffPage />} />
-                  <Route path="/admin/users"        element={<AdminUsersPage />} />
-                  <Route path="/admin/system-monitor" element={<AdminSystemMonitorPage />} />
+                  <Route path="/admin"              element={<RoleRoute user={user} roles={['ADMIN']}><AdminRevenuePage /></RoleRoute>} />
+                  <Route path="/admin/appointments" element={<RoleRoute user={user} roles={['ADMIN']}><AdminAppointmentsPage /></RoleRoute>} />
+                  <Route path="/admin/invoices"     element={<RoleRoute user={user} roles={['ADMIN']}><AdminInvoicesPage /></RoleRoute>} />
+                  <Route path="/admin/staff"        element={<RoleRoute user={user} roles={['ADMIN']}><AdminStaffPage /></RoleRoute>} />
+                  <Route path="/admin/users"        element={<RoleRoute user={user} roles={['ADMIN']}><AdminUsersPage /></RoleRoute>} />
+                  <Route path="/admin/system-monitor" element={<RoleRoute user={user} roles={['ADMIN']}><AdminSystemMonitorPage /></RoleRoute>} />
 
                   {/* Doctor */}
-                  <Route path="/doctor"               element={<DoctorAppointmentsPage />} />
-                  <Route path="/doctor/prescriptions" element={<DoctorPrescriptionsPage />} />
-                  <Route path="/doctor/medical-records" element={<DoctorMedicalRecordsPage />} />
-                  <Route path="/doctor/service-requests" element={<DoctorServiceRequestsPage />} />
-                  <Route path="/doctor/patients"      element={<DoctorPatientsPage />} />
+                  <Route path="/doctor"               element={<RoleRoute user={user} roles={['DOCTOR']}><DoctorAppointmentsPage /></RoleRoute>} />
+                  <Route path="/doctor/prescriptions" element={<RoleRoute user={user} roles={['DOCTOR']}><DoctorPrescriptionsPage /></RoleRoute>} />
+                  <Route path="/doctor/medical-records" element={<RoleRoute user={user} roles={['DOCTOR']}><DoctorMedicalRecordsPage /></RoleRoute>} />
+                  <Route path="/doctor/service-requests" element={<RoleRoute user={user} roles={['DOCTOR']}><DoctorServiceRequestsPage /></RoleRoute>} />
+                  <Route path="/doctor/patients"      element={<RoleRoute user={user} roles={['DOCTOR']}><DoctorPatientsPage /></RoleRoute>} />
 
                   {/* Patient */}
                   {user.role === 'PATIENT' && (

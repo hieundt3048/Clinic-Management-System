@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser, mapAuthResponse, getMyHealthProfile } from '../services/api';
+import { loginUser, mapAuthResponse, getMyHealthProfile, getMyDoctorProfile } from '../services/api';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = ({ onLogin }) => {
@@ -17,43 +17,51 @@ const Login = ({ onLogin }) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const { data } = await loginUser(formData);
-    const user = mapAuthResponse(data);
+    e.preventDefault();
+    try {
+      const { data } = await loginUser(formData);
+      const user = mapAuthResponse(data);
 
-    // Nếu là PATIENT → gọi thêm /health-profile/me để lấy patientId
-    if (user.role === 'PATIENT') {
-      try {
-        // Lưu token trước để interceptor đính vào request
-        localStorage.setItem('token', user.accessToken);
-        const profileRes = await getMyHealthProfile();         // GET /api/health-profile/me
-        user.patientId = profileRes.patientId;                 // gắn patientId vào object user
-      } catch {
-        // Không lấy được profile → vẫn login bình thường, chỉ thiếu patientId
+      // Lưu token trước để interceptor đính vào các request lấy profile.
+      localStorage.setItem('token', user.accessToken);
+
+      if (user.role === 'PATIENT' && !user.patientId) {
+        try {
+          const profileRes = await getMyHealthProfile();
+          user.patientId = profileRes.patientId;
+        } catch {
+          // Vẫn cho đăng nhập; các trang bệnh nhân sẽ báo thiếu hồ sơ nếu cần.
+        }
       }
-    }
 
-    localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('token', user.accessToken);
-    setMessage('Đăng nhập thành công!');
-    onLogin(user);
-    if (user.role === 'ADMIN') {
+      if (user.role === 'DOCTOR' && !user.doctorId) {
+        try {
+          const profileRes = await getMyDoctorProfile();
+          user.doctorId = profileRes.doctorId;
+        } catch {
+          // Vẫn cho đăng nhập; các trang bác sĩ sẽ báo lỗi tải dữ liệu nếu cần.
+        }
+      }
+
+      localStorage.setItem('user', JSON.stringify(user));
+      setMessage('Đăng nhập thành công!');
+      onLogin(user);
+
+      if (user.role === 'ADMIN') {
         navigate('/admin');
       } else if (user.role === 'DOCTOR') {
         navigate('/doctor');
       } else {
         navigate('/');
       }
-  } catch (error) {
-    if (error.response && error.response.data) {
-      setMessage(`Lỗi: ${error.response.data.message || 'Sai tên đăng nhập hoặc mật khẩu'}`);
-    } else {
-      setMessage('Lỗi kết nối tới máy chủ.');
+    } catch (error) {
+      if (error.response && error.response.data) {
+        setMessage(`Lỗi: ${error.response.data.message || 'Sai tên đăng nhập hoặc mật khẩu'}`);
+      } else {
+        setMessage('Lỗi kết nối tới máy chủ.');
+      }
     }
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">

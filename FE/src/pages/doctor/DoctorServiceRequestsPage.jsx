@@ -8,6 +8,7 @@ import {
   getMyDoctorProfile,
   getServiceRequestsByRecord,
   getStoredUser,
+  updateServiceRequestResult,
 } from '../../services/api';
 import {
   ArrowPathIcon,
@@ -35,6 +36,11 @@ const STATUS = {
   CANCELLED: { label: 'Đã hủy', cls: 'bg-red-50 text-red-700 border-red-200' },
 };
 
+const INVOICE_STATUS = {
+  UNPAID: { label: 'Chưa thu phí CLS', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+  PENDING_CASH: { label: 'Chờ xác nhận tiền mặt', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  PAID: { label: 'Đã thu phí CLS', cls: 'bg-green-50 text-green-700 border-green-200' },
+};
 const inputCls = (error) => [
   'w-full rounded-lg border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-blue-500',
   error ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300',
@@ -174,33 +180,125 @@ const CreateModal = ({ records, services, doctorId, onClose, onCreated }) => {
   );
 };
 
-const RequestCard = ({ request, onCancel, cancelling }) => (
-  <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <BeakerIcon className="h-5 w-5 text-blue-600" />
-          <p className="truncate text-sm font-bold text-gray-900">{request.serviceName || 'Dịch vụ cận lâm sàng'}</p>
+const ResultModal = ({ request, onClose, onSaved }) => {
+  const [status, setStatus] = useState('COMPLETED');
+  const [resultSummary, setResultSummary] = useState(request.resultSummary || '');
+  const [resultImages, setResultImages] = useState(request.resultImages || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    if (status === 'COMPLETED' && !resultSummary.trim()) {
+      setError('Vui lòng nhập tóm tắt kết quả trước khi hoàn thành.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      await updateServiceRequestResult(request.requestId, {
+        status,
+        resultSummary: resultSummary.trim() || null,
+        resultImages: resultImages.trim() || null,
+      });
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Cập nhật kết quả cận lâm sàng thất bại.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Nhập kết quả cận lâm sàng</h2>
+            <p className="mt-0.5 text-sm text-gray-400">{request.serviceName} · Bệnh án #{request.recordId}</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 hover:bg-gray-100"><XMarkIcon className="h-5 w-5 text-gray-400" /></button>
         </div>
-        <p className="mt-1 flex items-center gap-1 text-xs text-gray-500"><UserIcon className="h-3.5 w-3.5" />{request.patientName || 'Bệnh nhân'} · Bệnh án #{request.recordId}</p>
-        <p className="mt-1 flex items-center gap-1 text-xs text-gray-400"><CalendarDaysIcon className="h-3.5 w-3.5" />{fmtDateTime(request.createdAt)}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <StatusBadge status={request.status} />
-        {request.status === 'PENDING' && (
-          <button type="button" onClick={() => onCancel(request.requestId)} disabled={cancelling === request.requestId} className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">
-            {cancelling === request.requestId ? 'Đang hủy...' : 'Hủy'}
+
+        <div className="space-y-4 px-6 py-5">
+          {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-gray-700">Trạng thái</label>
+            <select value={status} onChange={(event) => setStatus(event.target.value)} className={inputCls(false)}>
+              <option value="IN_PROGRESS">Đang thực hiện</option>
+              <option value="COMPLETED">Đã có kết quả</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-gray-700">Tóm tắt kết quả</label>
+            <textarea value={resultSummary} onChange={(event) => setResultSummary(event.target.value)} rows={4} placeholder="Nhập kết quả xét nghiệm/siêu âm/chẩn đoán hình ảnh..." className={inputCls(false)} />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-gray-700">Link ảnh/kết quả đính kèm</label>
+            <input value={resultImages} onChange={(event) => setResultImages(event.target.value)} placeholder="URL ảnh, nhiều URL cách nhau bằng dấu phẩy" className={inputCls(false)} />
+          </div>
+        </div>
+
+        <div className="flex gap-3 border-t border-gray-100 px-6 py-4">
+          <button type="button" onClick={submit} disabled={saving} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">
+            {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <CheckCircleIcon className="h-4 w-4" />}
+            {saving ? 'Đang lưu...' : 'Lưu kết quả'}
           </button>
-        )}
+          <button type="button" onClick={onClose} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50">Hủy</button>
+        </div>
       </div>
     </div>
-    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-      <div className="rounded-lg bg-gray-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Lý do chỉ định</p><p className="mt-1 text-sm text-gray-700">{request.indicationReason || '—'}</p></div>
-      <div className="rounded-lg bg-gray-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Chi phí</p><p className="mt-1 text-sm text-gray-700">{fmtMoney(request.basePrice)}</p></div>
-    </div>
-    {request.resultSummary && <div className="mt-3 rounded-lg border border-green-100 bg-green-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-green-700">Kết quả</p><p className="mt-1 text-sm text-green-800">{request.resultSummary}</p></div>}
-  </article>
-);
+  );
+};
+
+const RequestCard = ({ request, onCancel, onEditResult, cancelling }) => {
+  const canUpdateResult = request.invoiceStatus === 'PAID' && !['COMPLETED', 'CANCELLED'].includes(request.status);
+  const waitingPayment = request.invoiceId && request.invoiceStatus !== 'PAID' && request.status !== 'CANCELLED';
+
+  return (
+    <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <BeakerIcon className="h-5 w-5 text-blue-600" />
+            <p className="truncate text-sm font-bold text-gray-900">{request.serviceName || 'Dịch vụ cận lâm sàng'}</p>
+          </div>
+          <p className="mt-1 flex items-center gap-1 text-xs text-gray-500"><UserIcon className="h-3.5 w-3.5" />{request.patientName || 'Bệnh nhân'} · Bệnh án #{request.recordId}</p>
+          <p className="mt-1 flex items-center gap-1 text-xs text-gray-400"><CalendarDaysIcon className="h-3.5 w-3.5" />{fmtDateTime(request.createdAt)}</p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <StatusBadge status={request.status} />
+          {waitingPayment && <span className="rounded-lg border border-orange-200 px-2.5 py-1 text-xs font-semibold text-orange-600">Chờ thu phí</span>}
+          {canUpdateResult && (
+            <button type="button" onClick={() => onEditResult(request)} className="rounded-lg border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50">
+              Nhập kết quả
+            </button>
+          )}
+          {request.status === 'PENDING' && (
+            <button type="button" onClick={() => onCancel(request.requestId)} disabled={cancelling === request.requestId} className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">
+              {cancelling === request.requestId ? 'Đang hủy...' : 'Hủy'}
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg bg-gray-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Lý do chỉ định</p><p className="mt-1 text-sm text-gray-700">{request.indicationReason || '—'}</p></div>
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Chi phí</p>
+          <p className="mt-1 text-sm text-gray-700">{fmtMoney(request.basePrice)}</p>
+          {request.invoiceId && (
+            <p className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${(INVOICE_STATUS[request.invoiceStatus] || INVOICE_STATUS.UNPAID).cls}`}>
+              HĐ CLS #{request.invoiceId} - {(INVOICE_STATUS[request.invoiceStatus] || INVOICE_STATUS.UNPAID).label}
+            </p>
+          )}
+        </div>
+      </div>
+      {request.resultSummary && <div className="mt-3 rounded-lg border border-green-100 bg-green-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-green-700">Kết quả</p><p className="mt-1 text-sm text-green-800">{request.resultSummary}</p></div>}
+    </article>
+  );
+};
 
 const DoctorServiceRequestsPage = () => {
   const [doctorId, setDoctorId] = useState(null);
@@ -212,6 +310,7 @@ const DoctorServiceRequestsPage = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [resultTarget, setResultTarget] = useState(null);
   const [cancelling, setCancelling] = useState(null);
   const [toast, setToast] = useState({ msg: '', type: '' });
 
@@ -291,6 +390,12 @@ const DoctorServiceRequestsPage = () => {
     }
   };
 
+  const handleResultSaved = async () => {
+    setResultTarget(null);
+    showToast('Đã cập nhật kết quả cận lâm sàng.');
+    await load();
+  };
+
   return (
     <DoctorLayout>
       <div className="mx-auto max-w-4xl space-y-5">
@@ -332,11 +437,12 @@ const DoctorServiceRequestsPage = () => {
         {!loading && !error && records.length > 0 && filtered.length === 0 && <div className="flex flex-col items-center gap-3 py-20 text-gray-400"><BeakerIcon className="h-14 w-14 text-gray-200" /><p className="text-base font-semibold text-gray-500">Chưa có chỉ định phù hợp</p></div>}
 
         <div className="space-y-3">
-          {!loading && !error && filtered.map((item) => <RequestCard key={item.requestId} request={item} onCancel={handleCancel} cancelling={cancelling} />)}
+          {!loading && !error && filtered.map((item) => <RequestCard key={item.requestId} request={item} onCancel={handleCancel} onEditResult={setResultTarget} cancelling={cancelling} />)}
         </div>
       </div>
 
-      {showModal && <CreateModal records={records} services={services} doctorId={doctorId} onClose={() => setShowModal(false)} onCreated={() => { setShowModal(false); showToast('Tạo chỉ định cận lâm sàng thành công.'); load(); }} />}
+      {showModal && <CreateModal records={records} services={services} doctorId={doctorId} onClose={() => setShowModal(false)} onCreated={() => { setShowModal(false); showToast('Tạo chỉ định thành công. Hệ thống đã tự sinh hóa đơn CLS chờ thanh toán.'); load(); }} />}
+      {resultTarget && <ResultModal request={resultTarget} onClose={() => setResultTarget(null)} onSaved={handleResultSaved} />}
     </DoctorLayout>
   );
 };
