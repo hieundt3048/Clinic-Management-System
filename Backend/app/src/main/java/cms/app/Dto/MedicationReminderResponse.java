@@ -1,7 +1,5 @@
 package cms.app.Dto;
 
-import cms.app.Entity.MedicationReminder.ReminderChannel;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -18,16 +16,13 @@ public class MedicationReminderResponse {
     private LocalDate endDate;
     private String note;
     private boolean active;
-    private ReminderChannel channel;
-
-    // ==================== Constructors ====================
 
     public MedicationReminderResponse() {}
 
     public MedicationReminderResponse(Integer reminderId, Integer prescriptionId,
                                        Integer patientId, String patientName, String patientEmail,
                                        LocalTime reminderTime, LocalDate startDate, LocalDate endDate,
-                                       String note, boolean active, ReminderChannel channel) {
+                                       String note, boolean active) {
         this.reminderId = reminderId;
         this.prescriptionId = prescriptionId;
         this.patientId = patientId;
@@ -38,10 +33,7 @@ public class MedicationReminderResponse {
         this.endDate = endDate;
         this.note = note;
         this.active = active;
-        this.channel = channel;
     }
-
-    // ==================== Getters & Setters ====================
 
     public Integer getReminderId() { return reminderId; }
     public void setReminderId(Integer reminderId) { this.reminderId = reminderId; }
@@ -72,7 +64,4 @@ public class MedicationReminderResponse {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
-
-    public ReminderChannel getChannel() { return channel; }
-    public void setChannel(ReminderChannel channel) { this.channel = channel; }
 }

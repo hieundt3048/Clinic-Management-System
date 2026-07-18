@@ -1,5 +1,7 @@
 package cms.app.Service;
 
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,8 @@ import cms.app.Entity.MedicationReminder;
  */
 @Service
 public class EmailService {
+
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     private final JavaMailSender mailSender;
 
@@ -27,25 +31,30 @@ public class EmailService {
     public void sendMedicationReminder(MedicationReminder reminder, String toEmail) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
-        message.setSubject("Nhắc nhở uống thuốc - Phòng khám CMS");
+        message.setSubject("An Khang Care - Nhắc uống thuốc");
         message.setText(buildEmailContent(reminder));
         mailSender.send(message);
     }
 
     private String buildEmailContent(MedicationReminder reminder) {
+        String patientName = reminder.getPatient().getFullName();
+        String reminderTime = reminder.getReminderTime().format(TIME_FORMAT);
+
         StringBuilder sb = new StringBuilder();
-        sb.append("Xin chào ").append(reminder.getPatient().getFullName()).append(",\n\n");
-        sb.append("Đây là nhắc nhở uống thuốc của bạn lúc ")
-          .append(reminder.getReminderTime()).append(".\n\n");
+        sb.append("Xin chào ").append(patientName).append(",\n\n");
+        sb.append("An Khang Care nhắc bạn đã đến giờ uống thuốc lúc ")
+          .append(reminderTime)
+          .append(".\n\n");
+        sb.append("Vui lòng dùng thuốc theo đúng hướng dẫn của bác sĩ để quá trình điều trị đạt hiệu quả tốt nhất.\n");
+        sb.append("Nếu bạn đã uống thuốc, có thể bỏ qua thông báo này.\n\n");
 
         if (reminder.getNote() != null && !reminder.getNote().isBlank()) {
-            sb.append("Lưu ý: ").append(reminder.getNote()).append("\n\n");
+            sb.append("Ghi chú của bạn: ").append(reminder.getNote().trim()).append("\n\n");
         }
 
-        sb.append("Thuốc theo đơn số #").append(reminder.getPrescription().getPrescriptionId()).append(".\n");
-        sb.append("Vui lòng uống thuốc đúng giờ để đảm bảo hiệu quả điều trị.\n\n");
-        sb.append("Trân trọng,\n");
-        sb.append("Phòng khám CMS");
+        sb.append("Chúc bạn nhiều sức khỏe,\n");
+        sb.append("An Khang Care\n");
+        sb.append("Chăm sóc trọn vẹn");
         return sb.toString();
     }
 }

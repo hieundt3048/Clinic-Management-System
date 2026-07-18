@@ -8,8 +8,11 @@ Backend/app/target/
 
 # Keep selected project paths visible to Git
 !.gitignore
+!USECASE_PROGRESS_CHECK.md
 !FE/
 !Backend/
+!Backend/scripts/
+!Backend/scripts/*.sql
 !Backend/app/
 !Backend/app/src/
 !Backend/app/src/main/

@@ -11,4 +11,6 @@ public interface IAppointmentService {
     void cancelAppointment(Integer appointmentId);
 
     void updateStatus(Integer appointmentId, Appointment.AppointmentStatus status);
+
+    void updateStatus(Integer appointmentId, Appointment.AppointmentStatus status, Integer actorDoctorId, boolean admin);
 }

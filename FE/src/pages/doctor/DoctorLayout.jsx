@@ -95,7 +95,7 @@ const DoctorLayout = ({ children }) => {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
       <aside className="hidden w-60 shrink-0 flex-col bg-blue-700 md:flex">
         <SidebarContent />
       </aside>
@@ -128,7 +128,7 @@ const DoctorLayout = ({ children }) => {
             {user?.specialtyName || 'Phòng khám An Khang'}
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-5">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-slate-100 p-5">{children}</main>
       </div>
     </div>
   );

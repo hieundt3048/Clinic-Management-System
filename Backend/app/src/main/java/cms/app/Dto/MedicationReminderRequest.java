@@ -1,6 +1,5 @@
 package cms.app.Dto;
 
-import cms.app.Entity.MedicationReminder.ReminderChannel;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -26,10 +25,6 @@ public class MedicationReminderRequest {
 
     private String note;
 
-    private ReminderChannel channel = ReminderChannel.EMAIL;
-
-    // ==================== Getters & Setters ====================
-
     public Integer getPrescriptionId() { return prescriptionId; }
     public void setPrescriptionId(Integer prescriptionId) { this.prescriptionId = prescriptionId; }
 
@@ -44,7 +39,4 @@ public class MedicationReminderRequest {
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
-
-    public ReminderChannel getChannel() { return channel; }
-    public void setChannel(ReminderChannel channel) { this.channel = channel; }
 }

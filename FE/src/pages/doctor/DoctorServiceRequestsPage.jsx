@@ -142,7 +142,7 @@ const CreateModal = ({ records, services, doctorId, onClose, onCreated }) => {
             {items.map((item, index) => {
               const service = services.find((svc) => svc.serviceId === Number(item.serviceId));
               return (
-                <div key={index} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div key={index} className="rounded-xl border border-blue-100 bg-blue-50/70 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500"><BeakerIcon className="h-4 w-4" />Dịch vụ {index + 1}</p>
                     {items.length > 1 && <button type="button" onClick={() => removeItem(index)} className="rounded-lg p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600"><TrashIcon className="h-4 w-4" /></button>}
@@ -258,7 +258,7 @@ const RequestCard = ({ request, onCancel, onEditResult, cancelling }) => {
   const waitingPayment = request.invoiceId && request.invoiceStatus !== 'PAID' && request.status !== 'CANCELLED';
 
   return (
-    <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+    <article className="rounded-xl border border-blue-100 bg-sky-50/90 p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -284,8 +284,8 @@ const RequestCard = ({ request, onCancel, onEditResult, cancelling }) => {
         </div>
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg bg-gray-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Lý do chỉ định</p><p className="mt-1 text-sm text-gray-700">{request.indicationReason || '—'}</p></div>
-        <div className="rounded-lg bg-gray-50 p-3">
+        <div className="rounded-lg border border-blue-100 bg-white/90 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Lý do chỉ định</p><p className="mt-1 text-sm text-gray-700">{request.indicationReason || '—'}</p></div>
+        <div className="rounded-lg border border-blue-100 bg-white/90 p-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Chi phí</p>
           <p className="mt-1 text-sm text-gray-700">{fmtMoney(request.basePrice)}</p>
           {request.invoiceId && (

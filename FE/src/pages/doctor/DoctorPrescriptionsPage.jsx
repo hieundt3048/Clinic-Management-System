@@ -18,15 +18,15 @@ const emptyMed = () => ({ medicineName:'', dosage:'', frequency:'', durationDays
 
 // ─── Modal 2 bước: B1 Tạo bệnh án (chẩn đoán) → B2 Kê đơn thuốc ───────────────
 
-const CreateModal = ({ appointments, onCreated, onClose }) => {
-  const [step, setStep] = useState(1); // 1 = chẩn đoán, 2 = kê đơn
+const CreateModal = ({ appointments, existingRecords = [], initialRecord = null, onCreated, onClose }) => {
+  const [step, setStep] = useState(initialRecord ? 2 : 1); // 1 = chẩn đoán, 2 = kê đơn
   const [appointmentId, setAppointmentId] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [treatmentPlan, setTreatmentPlan] = useState('');
   const [followUpDate, setFollowUpDate] = useState('');
 
-  const [recordId, setRecordId] = useState(null);
-  const [recordInfo, setRecordInfo] = useState(null);
+  const [recordId, setRecordId] = useState(initialRecord?.recordId || null);
+  const [recordInfo, setRecordInfo] = useState(initialRecord);
 
   const [notes, setNotes] = useState('');
   const [meds, setMeds] = useState([emptyMed()]);
@@ -35,8 +35,10 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  const completedAppts = appointments.filter(a => a.status === 'COMPLETED');
-  const selectedAppt = appointments.find(a => a.appointmentId === Number(appointmentId));
+  const recordedAppointmentIds = new Set(existingRecords.map((record) => record.appointmentId).filter(Boolean));
+  const completedAppts = appointments.filter(a => a.status === 'COMPLETED' && !recordedAppointmentIds.has(a.appointmentId));
+  const isPrescribingExistingRecord = Boolean(initialRecord);
+  const selectedAppt = completedAppts.find(a => a.appointmentId === Number(appointmentId));
 
   const inputCls = (err) =>
     `w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${err ? 'border-red-400 bg-red-50' : 'border-gray-200'}`;
@@ -138,12 +140,12 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Lịch hẹn <span className="text-red-500">*</span>
-                  <span className="text-xs text-gray-400 font-normal ml-1">(chỉ hiện lịch đã hoàn thành)</span>
+                  <span className="text-xs text-gray-400 font-normal ml-1">(chỉ hiện lịch đã hoàn thành chưa có bệnh án)</span>
                 </label>
                 <select value={appointmentId} onChange={e => setAppointmentId(e.target.value)}
                   className={inputCls(errors.appointmentId)}>
                   <option value="">-- Chọn lịch hẹn --</option>
-                  {completedAppts.length === 0 && <option disabled>Không có lịch hẹn đã hoàn thành</option>}
+                  {completedAppts.length === 0 && <option disabled>Không còn lịch hoàn thành nào chưa có bệnh án</option>}
                   {completedAppts.map(a => (
                     <option key={a.appointmentId} value={a.appointmentId}>
                       #{a.appointmentId} — {a.patientName} ({fmtDate(a.appointmentDate)})
@@ -192,7 +194,7 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
             <>
               <div className="bg-green-50 border border-green-100 rounded-lg px-4 py-3 text-sm text-green-700 flex items-center gap-2">
                 <ClipboardDocumentCheckIcon className="h-5 w-5 shrink-0" />
-                Đã ghi nhận chẩn đoán cho bệnh án #{recordId}. Giờ kê đơn thuốc tương ứng.
+                <span>{isPrescribingExistingRecord ? ('Kê đơn cho bệnh án #' + recordId) : ('Đã ghi nhận chẩn đoán cho bệnh án #' + recordId + '. Giờ kê đơn thuốc tương ứng.')}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -204,7 +206,7 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
               </div>
 
               {meds.map((m, i) => (
-                <div key={i} className="bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-3">
+                <div key={i} className="rounded-xl border border-blue-100 bg-blue-50/70 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-gray-500 flex items-center gap-1">
                       <BeakerIcon className="h-3.5 w-3.5" />Thuốc {i + 1}
@@ -276,10 +278,10 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
             </>
           ) : (
             <>
-              <button onClick={() => setStep(1)} disabled={saving}
+              {!isPrescribingExistingRecord && <button onClick={() => setStep(1)} disabled={saving}
                 className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-600 text-sm rounded-xl hover:bg-gray-50 transition">
                 <ArrowLeftIcon className="h-4 w-4" />Quay lại
-              </button>
+              </button>}
               <button onClick={handleCreatePrescription} disabled={saving}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 transition">
                 {saving ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : <CheckCircleIcon className="h-4 w-4" />}
@@ -295,8 +297,8 @@ const CreateModal = ({ appointments, onCreated, onClose }) => {
 
 // ─── RecordCard: hiển thị bệnh án đã tạo ──────────────────────────────────────
 
-const RecordCard = ({ record }) => (
-  <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-4">
+const RecordCard = ({ record, onPrescribe }) => (
+  <div className="rounded-xl border border-blue-100 bg-sky-50/90 p-4 shadow-sm transition-shadow hover:border-blue-200 hover:shadow-md">
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-start gap-3">
         <div className="p-2.5 rounded-xl bg-blue-100 shrink-0">
@@ -313,15 +315,22 @@ const RecordCard = ({ record }) => (
           <p className="text-sm text-gray-600 mt-2">{record.diagnosis}</p>
         </div>
       </div>
-      {record.hasPrescription ? (
-        <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium shrink-0">
-          Đã kê đơn
-        </span>
-      ) : (
-        <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded-full font-medium shrink-0">
-          Chưa kê đơn
-        </span>
-      )}
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        {record.hasPrescription ? (
+          <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">
+            Đã kê đơn
+          </span>
+        ) : (
+          <>
+            <span className="text-xs bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded-full font-medium">
+              Chưa kê đơn
+            </span>
+            <button type="button" onClick={() => onPrescribe(record)} className="rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50">
+              Kê đơn
+            </button>
+          </>
+        )}
+      </div>
     </div>
   </div>
 );
@@ -333,6 +342,7 @@ const DoctorPrescriptionsPage = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [prescriptionTarget, setPrescriptionTarget] = useState(null);
   const [toast, setToast] = useState({ msg:'', type:'' });
 
   const user = getStoredUser();
@@ -362,7 +372,7 @@ const DoctorPrescriptionsPage = () => {
             <h2 className="text-xl font-bold text-gray-900">Bệnh án & Kê đơn thuốc</h2>
             <p className="text-sm text-gray-400 mt-0.5">Ghi nhận chẩn đoán và kê đơn cho bệnh nhân sau khám</p>
           </div>
-          <button onClick={() => setShowModal(true)}
+          <button onClick={() => { setPrescriptionTarget(null); setShowModal(true); }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
             <PlusIcon className="h-4 w-4" />Tạo bệnh án mới
           </button>
@@ -388,19 +398,21 @@ const DoctorPrescriptionsPage = () => {
         )}
 
         <div className="space-y-3">
-          {records.map(r => <RecordCard key={r.recordId} record={r} />)}
+          {records.map(r => <RecordCard key={r.recordId} record={r} onPrescribe={(record) => { setPrescriptionTarget(record); setShowModal(true); }} />)}
         </div>
       </div>
 
       {showModal && (
         <CreateModal
           appointments={appointments}
+          existingRecords={records}
+          initialRecord={prescriptionTarget}
           onCreated={() => {
             setShowModal(false);
             showToast('Kê đơn thuốc thành công!');
             load();
           }}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setPrescriptionTarget(null); }}
         />
       )}
     </DoctorLayout>
@@ -408,3 +420,4 @@ const DoctorPrescriptionsPage = () => {
 };
 
 export default DoctorPrescriptionsPage;
+

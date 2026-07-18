@@ -131,9 +131,22 @@ public class AppointmentService implements IAppointmentService {
     @Override
     @Transactional
     public void updateStatus(Integer appointmentId, AppointmentStatus newStatus) {
+        updateStatus(appointmentId, newStatus, null, true);
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Integer appointmentId, AppointmentStatus newStatus, Integer actorDoctorId, boolean admin) {
         Appointment appointment = appointmentRepo.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy lịch hẹn với ID: " + appointmentId));
+
+        if (!admin) {
+            if (actorDoctorId == null || appointment.getDoctor() == null
+                    || !appointment.getDoctor().getDoctorId().equals(actorDoctorId)) {
+                throw new BusinessLogicException("Bác sĩ chỉ được cập nhật lịch hẹn của chính mình.");
+            }
+        }
 
         AppointmentStatus current = appointment.getStatus();
         boolean valid =

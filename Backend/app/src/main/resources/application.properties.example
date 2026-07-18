@@ -28,10 +28,6 @@ spring.mail.password=YOUR_EMAIL_APP_PASSWORD
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
-# Twilio SMS Configuration (optional)
-twilio.account-sid=
-twilio.auth-token=
-twilio.phone-number=
 
 # UC2 - follow-up reminder job
 app.reminder.follow-up.days-ahead=7

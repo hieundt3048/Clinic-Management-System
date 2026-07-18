@@ -120,7 +120,7 @@ const EditRecordModal = ({ record, onClose, onUpdated }) => {
   );
 };
 const RecordCard = ({ record, onEdit }) => (
-  <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+  <article className="rounded-xl border border-blue-100 bg-sky-50/90 p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Bệnh án #{record.recordId}</p>
@@ -137,11 +137,11 @@ const RecordCard = ({ record, onEdit }) => (
     </div>
 
     <div className="mt-4 grid gap-3 md:grid-cols-2">
-      <div className="rounded-lg bg-gray-50 p-3">
+      <div className="rounded-lg border border-blue-100 bg-white/90 p-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Chẩn đoán</p>
         <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{record.diagnosis || '—'}</p>
       </div>
-      <div className="rounded-lg bg-gray-50 p-3">
+      <div className="rounded-lg border border-blue-100 bg-white/90 p-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Hướng điều trị</p>
         <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{record.treatmentPlan || '—'}</p>
       </div>

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,4 +30,10 @@ public interface ReminderLogRepository extends JpaRepository<ReminderLog, Intege
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
     );
+    @Modifying
+    @Query("""
+        DELETE FROM ReminderLog r
+        WHERE r.reminder.reminderId = :reminderId
+        """)
+    void deleteByReminderId(@Param("reminderId") Integer reminderId);
 }

@@ -14,7 +14,7 @@ const MetricBadge = ({ label, value, unit, normal }) => {
   if (value == null) return null;
   return (
     <div className={`flex flex-col items-center px-3 py-2 rounded-xl border text-center ${
-      normal === false ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'
+      normal === false ? 'bg-red-50 border-red-200' : 'bg-white border-blue-100'
     }`}>
       <p className={`text-base font-bold ${normal === false ? 'text-red-600' : 'text-gray-800'}`}>
         {value}<span className="text-xs font-normal ml-0.5">{unit}</span>
@@ -44,7 +44,7 @@ const PatientCard = ({ patient }) => {
   const latest = metrics?.[0];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-blue-100 bg-sky-50/90 shadow-sm transition-shadow hover:border-blue-200 hover:shadow-md">
       <div className="p-4 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
@@ -68,7 +68,7 @@ const PatientCard = ({ patient }) => {
       </div>
 
       {expanded && (
-        <div className="border-t border-gray-100 px-4 py-4 bg-gray-50">
+        <div className="border-t border-blue-100 bg-blue-50/70 px-4 py-4">
           {loadingMx && (
             <div className="flex justify-center py-4">
               <ArrowPathIcon className="h-5 w-5 animate-spin text-blue-500" />
@@ -98,7 +98,7 @@ const PatientCard = ({ patient }) => {
                   normal={latest.bmi ? (latest.bmi >= 18.5 && latest.bmi <= 25) : null} />}
               </div>
               {latest.notes && (
-                <p className="text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                <p className="rounded-lg border border-blue-100 bg-white px-3 py-2 text-xs text-gray-500">
                   {latest.notes}
                 </p>
               )}
@@ -194,3 +194,4 @@ const DoctorPatientsPage = () => {
 };
 
 export default DoctorPatientsPage;
+

@@ -5,8 +5,6 @@ import java.time.LocalTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,15 +49,8 @@ public class MedicationReminder {
 
     @Column(nullable = false)
     private boolean active = true;
-
-    /** Kênh gửi: EMAIL, SMS */
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private ReminderChannel channel = ReminderChannel.EMAIL;
-
-    public enum ReminderChannel {
-        EMAIL, SMS, BOTH
-    }
+    private String channel = "EMAIL";
 
     public MedicationReminder() {}
 
@@ -87,6 +78,6 @@ public class MedicationReminder {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 
-    public ReminderChannel getChannel() { return channel; }
-    public void setChannel(ReminderChannel channel) { this.channel = channel; }
+    public String getChannel() { return channel; }
+    public void setChannel(String channel) { this.channel = channel; }
 }

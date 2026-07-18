@@ -39,8 +39,16 @@ const formatTime = (str) => {
 
 const isExpired = (endDate) => endDate && new Date(endDate + 'T23:59:59') < new Date();
 
-const CHANNEL_LABEL = { EMAIL: 'Email', SMS: 'SMS', BOTH: 'Email & SMS' };
 
+const ReminderField = ({ label, required, error, children }) => (
+  <div>
+    <label className="mb-1 block text-sm font-medium text-gray-700">
+      {label}{required && <span className="ml-0.5 text-red-500">*</span>}
+    </label>
+    {children}
+    {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+  </div>
+);
 // ─── ReminderCard ─────────────────────────────────────────────────────────────
 
 const ReminderCard = ({ reminder, onToggle, onDelete, toggling, deleting }) => {
@@ -65,7 +73,7 @@ const ReminderCard = ({ reminder, onToggle, onDelete, toggling, deleting }) => {
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <div>
               <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-0.5">
-                Đơn thuốc #{reminder.prescriptionId}
+                Lịch nhắc uống thuốc
               </p>
               <div className="flex items-center gap-2 flex-wrap mt-1">
                 <span className="flex items-center gap-1 text-sm font-bold text-gray-900">
@@ -90,9 +98,7 @@ const ReminderCard = ({ reminder, onToggle, onDelete, toggling, deleting }) => {
                   {reminder.active ? 'Đang bật' : 'Đã tắt'}
                 </span>
               )}
-              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                {CHANNEL_LABEL[reminder.channel] || reminder.channel}
-              </span>
+
             </div>
           </div>
 
@@ -160,7 +166,6 @@ const CreateModal = ({ prescriptions, patientId, onCreated, onClose }) => {
     startDate: new Date().toISOString().slice(0, 10),
     endDate: '',
     note: '',
-    channel: 'EMAIL',
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -204,7 +209,6 @@ const CreateModal = ({ prescriptions, patientId, onCreated, onClose }) => {
         startDate: form.startDate,
         endDate: form.endDate,
         note: form.note.trim() || null,
-        channel: form.channel,
       });
       onCreated(created);
     } catch (err) {
@@ -219,15 +223,6 @@ const CreateModal = ({ prescriptions, patientId, onCreated, onClose }) => {
       err ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'
     }`;
 
-  const Field = ({ label, required, error, children }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
-      </label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-    </div>
-  );
 
   const selectedPrescription = prescriptions.find(p => String(p.prescriptionId) === String(form.prescriptionId));
 
@@ -249,18 +244,18 @@ const CreateModal = ({ prescriptions, patientId, onCreated, onClose }) => {
             </div>
           )}
 
-          <Field label="Đơn thuốc" required error={errors.prescriptionId}>
+          <ReminderField label="Đơn thuốc" required error={errors.prescriptionId}>
             <select value={form.prescriptionId} onChange={e => handlePrescriptionChange(e.target.value)} className={inputCls(errors.prescriptionId)}>
               <option value="">-- Chọn đơn thuốc --</option>
               {prescriptions.length === 0 && <option disabled>Bạn chưa có đơn thuốc nào</option>}
               {prescriptions.map(p => (
                 <option key={p.prescriptionId} value={p.prescriptionId}>
-                  #{p.prescriptionId} — BS. {p.doctorName}
+                  Đơn thuốc của BS. {p.doctorName}
                   {p.createdAt ? ` (${new Date(p.createdAt).toLocaleDateString('vi-VN')})` : ''}
                 </option>
               ))}
             </select>
-          </Field>
+          </ReminderField>
 
           {selectedPrescription?.details?.length > 0 && (
             <div className="bg-blue-50 rounded-lg px-4 py-3 border border-blue-100 space-y-1">
@@ -279,33 +274,20 @@ const CreateModal = ({ prescriptions, patientId, onCreated, onClose }) => {
             </div>
           )}
 
-          <Field label="Giờ nhắc" required error={errors.reminderTime}>
+          <ReminderField label="Giờ nhắc" required error={errors.reminderTime}>
             <input type="time" value={form.reminderTime} onChange={e => set('reminderTime', e.target.value)} className={inputCls(errors.reminderTime)} />
-          </Field>
+          </ReminderField>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Ngày bắt đầu" required error={errors.startDate}>
+            <ReminderField label="Ngày bắt đầu" required error={errors.startDate}>
               <input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls(errors.startDate)} />
-            </Field>
-            <Field label="Ngày kết thúc" required error={errors.endDate}>
+            </ReminderField>
+            <ReminderField label="Ngày kết thúc" required error={errors.endDate}>
               <input type="date" value={form.endDate} min={form.startDate} onChange={e => set('endDate', e.target.value)} className={inputCls(errors.endDate)} />
-            </Field>
+            </ReminderField>
           </div>
 
-          <Field label="Kênh nhắc nhở">
-            <div className="flex gap-2">
-              {['EMAIL', 'SMS', 'BOTH'].map(c => (
-                <button key={c} onClick={() => set('channel', c)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg border transition ${
-                    form.channel === c ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:border-blue-300'
-                  }`}>
-                  {CHANNEL_LABEL[c]}
-                </button>
-              ))}
-            </div>
-          </Field>
-
-          <Field label="Ghi chú">
+          <ReminderField label="Ghi chú">
             <textarea
               value={form.note}
               onChange={e => set('note', e.target.value)}
@@ -314,7 +296,7 @@ const CreateModal = ({ prescriptions, patientId, onCreated, onClose }) => {
               className={inputCls(false)}
               maxLength={255}
             />
-          </Field>
+          </ReminderField>
         </div>
 
         <div className="flex gap-3 px-6 py-4 border-t border-gray-100">
@@ -513,3 +495,4 @@ const MedicationReminderPage = () => {
 };
 
 export default MedicationReminderPage;
+
