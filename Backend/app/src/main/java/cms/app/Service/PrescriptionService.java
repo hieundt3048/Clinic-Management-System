@@ -21,14 +21,16 @@ public class PrescriptionService implements IPrescriptionService {
 
     private final PrescriptionRepository prescriptionRepo;
     private final MedicalRecordRepository medicalRecordRepo;
+    private final NotificationService notificationService;
 
     public PrescriptionService(PrescriptionRepository prescriptionRepo,
-                                MedicalRecordRepository medicalRecordRepo) {
+                               MedicalRecordRepository medicalRecordRepo,
+                               NotificationService notificationService) {
         this.prescriptionRepo = prescriptionRepo;
         this.medicalRecordRepo = medicalRecordRepo;
+        this.notificationService = notificationService;
     }
 
-    // Tạo đơn thuốc
     @Override
     @Transactional
     public PrescriptionResponse createPrescription(CreatePrescriptionRequest request) {
@@ -36,12 +38,10 @@ public class PrescriptionService implements IPrescriptionService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy bệnh án ID: " + request.getRecordId()));
 
-        // Tạo Prescription
         Prescription prescription = new Prescription();
         prescription.setMedicalRecord(record);
         prescription.setNotes(request.getNotes());
 
-        // Map từng PrescriptionDetailRequest → PrescriptionDetail
         List<PrescriptionDetail> details = request.getDetails().stream()
                 .map(dto -> {
                     PrescriptionDetail detail = new PrescriptionDetail();
@@ -56,11 +56,17 @@ public class PrescriptionService implements IPrescriptionService {
 
         prescription.setDetails(details);
         prescriptionRepo.save(prescription);
+        notificationService.notifyPatient(
+                record.getPatient(),
+                "PRESCRIPTION_CREATED",
+                "Đơn thuốc mới đã được kê",
+                "Bác sĩ " + record.getDoctor().getFullName()
+                        + " đã kê đơn thuốc mới. Bạn có thể xem chi tiết và tạo lịch nhắc uống thuốc nếu cần.",
+                "/prescriptions");
 
         return toResponse(prescription);
     }
 
-    // Lấy đơn thuốc theo ID
     @Override
     @Transactional(readOnly = true)
     public PrescriptionResponse getPrescriptionById(Integer prescriptionId) {
@@ -70,11 +76,9 @@ public class PrescriptionService implements IPrescriptionService {
         return toResponse(prescription);
     }
 
-    // Lấy đơn thuốc theo bệnh án
     @Override
     @Transactional(readOnly = true)
     public List<PrescriptionResponse> getPrescriptionsByRecord(Integer recordId) {
-        // Kiểm tra bệnh án tồn tại
         if (!medicalRecordRepo.existsById(recordId)) {
             throw new ResourceNotFoundException("Không tìm thấy bệnh án ID: " + recordId);
         }
@@ -82,7 +86,6 @@ public class PrescriptionService implements IPrescriptionService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Lấy đơn thuốc theo bệnh nhân
     @Override
     @Transactional(readOnly = true)
     public List<PrescriptionResponse> getPrescriptionsByPatient(Integer patientId) {
@@ -90,7 +93,6 @@ public class PrescriptionService implements IPrescriptionService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    // Xóa đơn thuốc
     @Override
     @Transactional
     public void deletePrescription(Integer prescriptionId) {
@@ -100,26 +102,19 @@ public class PrescriptionService implements IPrescriptionService {
         prescriptionRepo.delete(prescription);
     }
 
-    // Private helper — map Entity → DTO
     private PrescriptionResponse toResponse(Prescription p) {
         PrescriptionResponse response = new PrescriptionResponse();
         response.setPrescriptionId(p.getPrescriptionId());
         response.setCreatedAt(p.getCreatedAt());
         response.setNotes(p.getNotes());
 
-        // Thông tin từ MedicalRecord
         MedicalRecord record = p.getMedicalRecord();
         response.setRecordId(record.getRecordId());
-
-        // Thông tin bệnh nhân — Patient.fullName, Patient.user.email
         response.setPatientId(record.getPatient().getPatientId());
         response.setPatientName(record.getPatient().getFullName());
-
-        // Thông tin bác sĩ — Doctor.fullName
         response.setDoctorId(record.getDoctor().getDoctorId());
         response.setDoctorName(record.getDoctor().getFullName());
 
-        // Map details
         List<PrescriptionDetailResponse> detailResponses = p.getDetails()
                 .stream()
                 .map(d -> {

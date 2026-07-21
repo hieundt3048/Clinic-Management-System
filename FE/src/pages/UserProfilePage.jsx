@@ -84,7 +84,7 @@ const ProfileCompleteness = ({ profile }) => {
   const color  = pct === 100 ? 'bg-green-500' : pct >= 60 ? 'bg-blue-500' : 'bg-orange-400';
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+    <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-4 shadow-md shadow-sky-100">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm font-semibold text-gray-700">Độ hoàn thiện hồ sơ</p>
         <span className={`text-sm font-bold ${pct === 100 ? 'text-green-600' : pct >= 60 ? 'text-blue-600' : 'text-orange-500'}`}>

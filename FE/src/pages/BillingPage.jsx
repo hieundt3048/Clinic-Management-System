@@ -371,8 +371,8 @@ const PayModal = ({ invoice, onPaid, onClose }) => {
 // ─── InvoiceCard ──────────────────────────────────────────────────────────────
 
 const InvoiceCard = ({ invoice, onPay }) => (
-  <div className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
-    invoice.status === 'UNPAID' ? 'border-orange-100' : invoice.status === 'PENDING_CASH' ? 'border-yellow-100' : 'border-gray-200'
+  <div className={`rounded-xl border bg-sky-50/90 shadow-md shadow-sky-100 transition-shadow hover:shadow-lg overflow-hidden ${
+    invoice.status === 'UNPAID' ? 'border-orange-200' : invoice.status === 'PENDING_CASH' ? 'border-yellow-200' : 'border-sky-200'
   }`}>
     <div className={`h-1 ${invoice.status === 'UNPAID' ? 'bg-gradient-to-r from-orange-400 to-orange-300' : invoice.status === 'PENDING_CASH' ? 'bg-gradient-to-r from-yellow-400 to-yellow-300' : 'bg-gradient-to-r from-green-400 to-green-300'}`} />
     <div className="p-5">
@@ -520,7 +520,7 @@ const BillingPage = () => {
 
         {!loading && !error && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+            <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 shadow-sm">
               <p className="text-xs text-gray-400 mb-1">Tổng hóa đơn</p>
               <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
               <p className="text-sm font-semibold text-gray-500 mt-0.5">{formatCurrency(stats.totalAmount)}</p>
@@ -562,7 +562,7 @@ const BillingPage = () => {
         </div>
 
         {loading && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sky-200 bg-sky-50/80 py-16 gap-3">
             <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-500" />
             <p className="text-sm text-gray-400">Đang tải hóa đơn...</p>
           </div>
@@ -576,7 +576,7 @@ const BillingPage = () => {
         )}
 
         {!loading && !error && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sky-200 bg-sky-50/80 py-16 gap-3 text-sky-500">
             <CurrencyDollarIcon className="h-14 w-14 text-gray-200" />
             <p className="text-base font-medium text-gray-500">
               {invoices.length === 0 ? 'Chưa có hóa đơn nào' : 'Không tìm thấy hóa đơn phù hợp'}

@@ -8,7 +8,7 @@ const DoctorDashboard = ({ user }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Lịch hẹn hôm nay */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-6 shadow-md shadow-sky-100">
           <h2 className="text-xl font-semibold mb-2">Lịch hẹn hôm nay</h2>
           <ul>
             <li className="border-b py-2">
@@ -22,7 +22,7 @@ const DoctorDashboard = ({ user }) => {
         </div>
 
         {/* Thống kê nhanh */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-6 shadow-md shadow-sky-100">
           <h2 className="text-xl font-semibold mb-2">Thống kê nhanh</h2>
           <div className="flex justify-around">
             <div className="text-center">

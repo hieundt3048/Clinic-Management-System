@@ -22,9 +22,6 @@ import cms.app.Dto.HealthMetricSummaryResponse;
 import cms.app.Service.IHealthMetricService;
 import jakarta.validation.Valid;
 
-/**
- * REST ControllerTheo dõi sức khỏe.
- */
 @RestController
 @RequestMapping("/api/health-metrics")
 public class HealthMetricController {
@@ -35,22 +32,14 @@ public class HealthMetricController {
         this.healthMetricService = healthMetricService;
     }
 
-    /**
-     * Bệnh nhân ghi chỉ số sức khỏe mới.
-     * POST /api/health-metrics
-     */
     @PostMapping
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<HealthMetricResponse> recordMetric(
             @Valid @RequestBody HealthMetricRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(healthMetricService.recordMetric(request));
     }
 
-    /**
-     * Lấy toàn bộ lịch sử chỉ số sức khỏe của bệnh nhân.
-     * GET /api/health-metrics/{patientId}
-     */
     @GetMapping("/{patientId}")
     @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN') " +
                   "or (hasRole('PATIENT') and #patientId == authentication.principal.patientId)")
@@ -59,10 +48,6 @@ public class HealthMetricController {
         return ResponseEntity.ok(healthMetricService.getHistory(patientId));
     }
 
-    /**
-     * Lấy lịch sử theo khoảng thời gian.
-     * GET /api/health-metrics/{patientId}/range?from=2026-01-01&to=2026-05-31
-     */
     @GetMapping("/{patientId}/range")
     @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN') " +
                   "or (hasRole('PATIENT') and #patientId == authentication.principal.patientId)")
@@ -73,10 +58,6 @@ public class HealthMetricController {
         return ResponseEntity.ok(healthMetricService.getHistoryByDateRange(patientId, from, to));
     }
 
-    /**
-     * Lấy tổng hợp chỉ số mới nhất của bệnh nhân.
-     * GET /api/health-metrics/{patientId}/summary
-     */
     @GetMapping("/{patientId}/summary")
     @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN') " +
                   "or (hasRole('PATIENT') and #patientId == authentication.principal.patientId)")
@@ -85,12 +66,8 @@ public class HealthMetricController {
         return ResponseEntity.ok(healthMetricService.getLatestSummary(patientId));
     }
 
-    /**
-     * Xóa một bản ghi chỉ số.
-     * DELETE /api/health-metrics/{metricId}
-     */
     @DeleteMapping("/{metricId}")
-    @PreAuthorize("hasAnyRole('PATIENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<Void> deleteMetric(@PathVariable Integer metricId) {
         healthMetricService.deleteMetric(metricId);
         return ResponseEntity.noContent().build();

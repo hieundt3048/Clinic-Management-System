@@ -40,7 +40,7 @@ const quickActions = [
   },
   {
     title: 'Theo dõi sức khỏe',
-    text: 'Ghi nhận huyết áp, nhịp tim, cân nặng, đường huyết, SpO2 và theo dõi xu hướng.',
+    text: 'Xem huyết áp, nhịp tim, cân nặng, đường huyết, SpO2 do bác sĩ ghi nhận và theo dõi xu hướng.',
     href: '/health-tracking',
     icon: ChartBarIcon,
     tone: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -80,7 +80,7 @@ const FeatureCard = ({ item }) => {
   return (
     <Link
       to={item.href}
-      className="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+      className="group rounded-xl border border-sky-200 bg-sky-50/90 p-4 shadow-md shadow-sky-100 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
     >
       <div className="flex items-start gap-3">
         <div className={'rounded-xl border p-2.5 ' + item.tone}>
@@ -101,7 +101,7 @@ const FeatureCard = ({ item }) => {
 const RecordLink = ({ item }) => {
   const Icon = item.icon;
   return (
-    <Link to={item.href} className="flex gap-3 rounded-lg border border-gray-200 bg-white p-4 transition hover:border-blue-200 hover:bg-blue-50/40">
+    <Link to={item.href} className="flex gap-3 rounded-lg border border-sky-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:bg-cyan-50">
       <div className="h-fit rounded-lg bg-gray-50 p-2">
         <Icon className="h-5 w-5 text-blue-600" />
       </div>
@@ -156,7 +156,7 @@ const PatientDashboard = ({ user }) => {
                 </div>
                 <div className="rounded-xl bg-white/15 p-4 sm:col-span-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-blue-50">Nên làm tiếp</p>
-                  <p className="mt-2 text-sm leading-6 text-white">Cập nhật hồ sơ cá nhân, ghi nhận chỉ số sức khỏe gần nhất và kiểm tra lịch tái khám để bác sĩ có thêm dữ liệu theo dõi.</p>
+                  <p className="mt-2 text-sm leading-6 text-white">Cập nhật hồ sơ cá nhân, xem chỉ số sức khỏe gần nhất và kiểm tra lịch tái khám để nắm rõ quá trình theo dõi.</p>
                 </div>
               </div>
             </div>
@@ -176,7 +176,7 @@ const PatientDashboard = ({ user }) => {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Theo dõi sau khi khám</h2>
@@ -192,7 +192,7 @@ const PatientDashboard = ({ user }) => {
           </section>
 
           <aside className="space-y-4">
-            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <section className="rounded-2xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
               <div className="flex items-center gap-2">
                 <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
                 <h2 className="text-base font-bold text-gray-900">Quy trình chăm sóc</h2>
@@ -214,7 +214,7 @@ const PatientDashboard = ({ user }) => {
               </div>
               <ul className="mt-4 space-y-3 text-sm leading-6 text-gray-600">
                 <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600" />Kiểm tra thông báo lịch hẹn để không bỏ lỡ lịch tái khám.</li>
-                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600" />Ghi lại chỉ số sức khỏe nếu bạn đang theo dõi huyết áp, đường huyết hoặc cân nặng.</li>
+                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600" />Theo dõi chỉ số sức khỏe đã được bác sĩ ghi nhận nếu bạn đang cần kiểm soát huyết áp, đường huyết hoặc cân nặng.</li>
                 <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-600" />Xem hóa đơn để hoàn tất các khoản cần thanh toán.</li>
               </ul>
             </section>

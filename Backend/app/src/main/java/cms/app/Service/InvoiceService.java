@@ -33,14 +33,17 @@ public class InvoiceService implements IInvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
+    private final NotificationService notificationService;
 
     public InvoiceService(
             InvoiceRepository invoiceRepository,
             AppointmentRepository appointmentRepository,
-            PatientRepository patientRepository) {
+            PatientRepository patientRepository,
+            NotificationService notificationService) {
         this.invoiceRepository = invoiceRepository;
         this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -82,6 +85,13 @@ public class InvoiceService implements IInvoiceService {
         invoice.setPaidAt(null);
 
         Invoice saved = invoiceRepository.save(invoice);
+        notificationService.notifyPatient(
+                saved.getPatient(),
+                "INVOICE_CREATED",
+                "Có hóa đơn phí khám mới",
+                "Phòng khám đã tạo hóa đơn phí khám " + formatAmount(saved.getTotalAmount())
+                        + ". Vui lòng kiểm tra và thanh toán khi sẵn sàng.",
+                "/billing");
         return toResponse(saved);
     }
 
@@ -156,6 +166,22 @@ public class InvoiceService implements IInvoiceService {
         }
 
         Invoice saved = invoiceRepository.save(invoice);
+        if (saved.getStatus() == PaymentStatus.PAID) {
+            notifyInvoicePaid(saved);
+        } else if (saved.getStatus() == PaymentStatus.PENDING_CASH) {
+            notificationService.notifyPatient(
+                    saved.getPatient(),
+                    "INVOICE_PENDING_CASH",
+                    "Đã ghi nhận thanh toán tại quầy",
+                    "Hóa đơn của bạn đang chờ nhân viên xác nhận thu tiền mặt tại quầy.",
+                    "/billing");
+            notificationService.notifyAdmins(
+                    "INVOICE_PENDING_CASH",
+                    "Có thanh toán tiền mặt cần duyệt",
+                    saved.getPatient().getFullName() + " đã chọn thanh toán tại quầy cho hóa đơn "
+                            + formatAmount(saved.getTotalAmount()) + ".",
+                    "/admin/invoices");
+        }
         return toResponse(saved);
     }
 
@@ -181,7 +207,38 @@ public class InvoiceService implements IInvoiceService {
         invoice.setPaidAt(LocalDateTime.now());
 
         Invoice saved = invoiceRepository.save(invoice);
+        notifyInvoicePaid(saved);
         return toResponse(saved);
+    }
+
+    private void notifyInvoicePaid(Invoice invoice) {
+        notificationService.notifyPatient(
+                invoice.getPatient(),
+                "INVOICE_PAID",
+                "Hóa đơn đã thanh toán",
+                "Phòng khám đã xác nhận hóa đơn " + formatAmount(invoice.getTotalAmount()) + " của bạn.",
+                "/billing");
+        notificationService.notifyAdmins(
+                "INVOICE_PAID",
+                "Hóa đơn đã được thanh toán",
+                invoice.getPatient().getFullName() + " đã thanh toán hóa đơn "
+                        + formatAmount(invoice.getTotalAmount()) + ".",
+                "/admin/invoices");
+
+        if (invoice.getInvoiceType() == InvoiceType.CLINICAL_SERVICE) {
+            notificationService.notifyDoctor(
+                    invoice.getAppointment().getDoctor(),
+                    "CLINICAL_INVOICE_PAID",
+                    "Bệnh nhân đã thanh toán CLS",
+                    invoice.getPatient().getFullName()
+                            + " đã thanh toán dịch vụ cận lâm sàng. Bạn có thể thực hiện hoặc cập nhật kết quả.",
+                    "/doctor/service-requests");
+        }
+    }
+
+    private String formatAmount(Double amount) {
+        if (amount == null) return "0 đ";
+        return String.format("%,.0f đ", amount);
     }
 
     private boolean isAdmin(Iterable<? extends GrantedAuthority> authorities) {

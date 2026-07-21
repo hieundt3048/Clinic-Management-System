@@ -209,7 +209,7 @@ const AppointmentPage = () => {
         </div>
 
         {/* Stepper */}
-        <div className="flex items-center justify-between mb-8 bg-white rounded-lg shadow-sm p-4">
+        <div className="mb-8 flex items-center justify-between rounded-xl border border-sky-200 bg-sky-50/90 p-4 shadow-md shadow-sky-100">
           {STEPS.map((s, i) => (
             <React.Fragment key={s.id}>
               <button
@@ -243,7 +243,7 @@ const AppointmentPage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Bước 1: Bộ lọc */}
             {step === 1 && (
-              <section className="bg-white rounded-lg shadow-sm p-6">
+              <section className="rounded-xl border border-sky-200 bg-sky-50/90 p-6 shadow-md shadow-sky-100">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
                   Chọn thông tin khám
                 </h2>
@@ -314,7 +314,7 @@ const AppointmentPage = () => {
 
             {/* Bước 2: Thời gian */}
             {step === 2 && (
-              <section className="bg-white rounded-lg shadow-sm p-6">
+              <section className="rounded-xl border border-sky-200 bg-sky-50/90 p-6 shadow-md shadow-sky-100">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Chọn thời gian khám</h2>
 
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -376,10 +376,10 @@ const AppointmentPage = () => {
 
             {/* Bước 3: Bệnh nhân */}
             {step === 3 && (
-              <section className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+              <section className="rounded-xl border border-sky-200 bg-sky-50/90 p-6 shadow-md shadow-sky-100 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-800">Thông tin bệnh nhân</h2>
 
-                <div className="bg-gray-50 rounded-lg p-4 grid sm:grid-cols-2 gap-3 text-sm">
+                <div className="rounded-lg border border-sky-100 bg-white p-4 grid sm:grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-gray-500">Họ tên:</span>{' '}
                     <strong>{profile?.fullName || '—'}</strong>
@@ -504,7 +504,7 @@ const AppointmentPage = () => {
 
           {/* Tóm tắt */}
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4 border border-blue-100">
+            <div className="sticky top-4 rounded-xl border border-sky-200 bg-sky-50/90 p-6 shadow-md shadow-sky-100">
               <h3 className="font-bold text-gray-800 mb-4">Tóm tắt đặt lịch</h3>
               <dl className="space-y-3 text-sm">
                 <div>

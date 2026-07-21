@@ -269,8 +269,8 @@ const DoctorCard = ({ doctor, onEdit, onToggle, onDelete, toggling, deleting }) 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className={`bg-white rounded-xl border shadow-sm transition-all hover:shadow-md ${
-      !doctor.active ? 'opacity-60 border-gray-200' : 'border-blue-100'
+    <div className={`rounded-xl border bg-sky-50/90 shadow-md shadow-sky-100 transition-all hover:shadow-lg ${
+      !doctor.active ? 'opacity-70 border-slate-200' : 'border-sky-200'
     }`}>
       <div className="p-4">
         <div className="flex items-start gap-3">

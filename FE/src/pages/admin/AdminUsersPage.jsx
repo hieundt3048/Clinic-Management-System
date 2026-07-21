@@ -45,7 +45,7 @@ const AccountCard = ({ account, onToggle, toggling }) => {
   const profileLabel = account.role === 'PATIENT' ? 'Mã BN' : account.role === 'DOCTOR' ? 'Mã BS' : 'User ID';
 
   return (
-    <article className={'rounded-xl border bg-white p-4 shadow-sm transition hover:shadow-md ' + (account.active ? 'border-gray-200' : 'border-gray-200 opacity-70')}>
+    <article className={'rounded-xl border bg-sky-50/90 p-4 shadow-md shadow-sky-100 transition hover:shadow-lg ' + (account.active ? 'border-blue-100' : 'border-blue-100 opacity-70')}>
       <div className="flex items-start gap-3">
         <div className={account.active ? 'rounded-full bg-blue-100 p-2.5' : 'rounded-full bg-gray-100 p-2.5'}>
           <UserCircleIcon className={account.active ? 'h-6 w-6 text-blue-600' : 'h-6 w-6 text-gray-400'} />

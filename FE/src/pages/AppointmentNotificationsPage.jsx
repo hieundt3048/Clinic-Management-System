@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PatientLayout from '../components/PatientLayout';
 import {
@@ -111,7 +111,7 @@ const NoticeCard = ({ item, read, onMarkRead }) => {
   const isFollowUp = item.type === 'follow-up';
 
   return (
-    <article className={`border rounded-xl bg-white p-4 shadow-sm transition ${read ? 'border-gray-200' : 'border-blue-200 ring-1 ring-blue-100'}`}>
+    <article className={`border rounded-xl bg-sky-50/90 p-4 shadow-md shadow-sky-100 transition ${read ? 'border-blue-100' : 'border-blue-300 ring-1 ring-blue-100'}`}>
       <div className="flex items-start gap-4">
         <div className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 ${isFollowUp ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
           {isFollowUp ? <BellAlertIcon className="h-6 w-6" /> : <CalendarDaysIcon className="h-6 w-6" />}
@@ -319,7 +319,7 @@ const AppointmentNotificationsPage = () => {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-sky-200 bg-sky-50/90 p-3 shadow-md shadow-sky-100 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-2">
             {FILTERS.map((option) => (
               <button
@@ -348,7 +348,7 @@ const AppointmentNotificationsPage = () => {
         </div>
 
         {loading && (
-          <div className="flex justify-center rounded-xl border border-gray-200 bg-white py-12">
+          <div className="flex justify-center rounded-xl border border-blue-100 bg-blue-50/70 py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
           </div>
         )}
@@ -360,7 +360,7 @@ const AppointmentNotificationsPage = () => {
         )}
 
         {!loading && !error && visibleItems.length === 0 && (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+          <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/70 p-10 text-center">
             <BellAlertIcon className="mx-auto h-10 w-10 text-gray-300" />
             <h2 className="mt-3 text-base font-semibold text-gray-900">Chưa có thông báo phù hợp</h2>
             <p className="mt-1 text-sm text-gray-500">

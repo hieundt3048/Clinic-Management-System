@@ -107,7 +107,7 @@ const AppointmentCard = ({ appt, onCancel, cancelling }) => {
   const isFuture = new Date(appt.appointmentDate) > new Date();
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="rounded-xl border border-sky-200 bg-sky-50/90 shadow-md shadow-sky-100 transition-shadow hover:shadow-lg overflow-hidden">
       {/* Header */}
       <div className="flex items-start justify-between p-5 gap-4">
         <div className="flex items-start gap-4 min-w-0">
@@ -148,7 +148,7 @@ const AppointmentCard = ({ appt, onCancel, cancelling }) => {
 
       {/* Expanded */}
       {expanded && (
-        <div className="border-t border-gray-100 px-5 py-4 bg-gray-50 space-y-2.5">
+        <div className="border-t border-sky-200 bg-white/80 px-5 py-4 space-y-2.5">
           {appt.roomNumber && (
             <DetailRow icon={MapPinIcon} label="Phòng khám" value={appt.roomNumber} />
           )}
@@ -295,7 +295,7 @@ const patientId = user?.patientId ?? user?.userId;
               { label: 'Hoàn thành', value: stats.completed, color: 'text-green-700', bg: 'bg-green-50' },
               { label: 'Đã hủy', value: stats.cancelled, color: 'text-red-600', bg: 'bg-red-50' },
             ].map((s) => (
-              <div key={s.label} className={`${s.bg} rounded-xl px-4 py-3 border border-gray-100`}>
+              <div key={s.label} className={`${s.bg} rounded-xl px-4 py-3 border border-sky-200 shadow-sm`}>
                 <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
               </div>
@@ -339,7 +339,7 @@ const patientId = user?.patientId ?? user?.userId;
 
         {/* Nội dung */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-500">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sky-200 bg-sky-50/80 py-16 gap-3 text-sky-600">
             <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-500" />
             <p className="text-sm">Đang tải dữ liệu...</p>
           </div>
@@ -349,7 +349,7 @@ const patientId = user?.patientId ?? user?.userId;
             {error}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sky-200 bg-sky-50/80 py-16 gap-3 text-sky-500">
             <CalendarDaysIcon className="h-14 w-14 text-gray-200" />
             <p className="text-base font-medium text-gray-500">
               {appointments.length === 0 ? 'Bạn chưa có lịch hẹn nào' : 'Không tìm thấy kết quả phù hợp'}

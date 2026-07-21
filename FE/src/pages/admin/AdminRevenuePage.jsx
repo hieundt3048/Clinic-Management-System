@@ -32,7 +32,7 @@ const PERIODS = [
 // ─── StatCard ─────────────────────────────────────────────────────────────────
 
 const StatCard = ({ icon: Icon, label, value, sub, color }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+  <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">{label}</p>
@@ -145,7 +145,7 @@ const AdminRevenuePage = () => {
 
             {/* Trend chart */}
             {trendData.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+              <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
                 <h3 className="text-sm font-semibold text-gray-700 mb-4">Xu hướng doanh thu</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={trendData}>
@@ -163,7 +163,7 @@ const AdminRevenuePage = () => {
             {/* Doctor + Specialty charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {doctorData.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Doanh thu theo bác sĩ</h3>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={doctorData} layout="vertical">
@@ -178,7 +178,7 @@ const AdminRevenuePage = () => {
               )}
 
               {specialtyData.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Doanh thu theo chuyên khoa</h3>
                   <div className="space-y-2.5">
                     {specialtyData.map((s, i) => {

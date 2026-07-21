@@ -36,17 +36,20 @@ public class ServiceRequestService implements IServiceRequestService {
     private final MedicalRecordRepository medicalRecordRepo;
     private final DoctorRepository doctorRepo;
     private final InvoiceRepository invoiceRepository;
+    private final NotificationService notificationService;
 
     public ServiceRequestService(ServiceRequestRepository serviceRequestRepo,
                                   ServiceCatalogRepository serviceCatalogRepo,
                                   MedicalRecordRepository medicalRecordRepo,
                                   DoctorRepository doctorRepo,
-                                  InvoiceRepository invoiceRepository) {
+                                  InvoiceRepository invoiceRepository,
+                                  NotificationService notificationService) {
         this.serviceRequestRepo = serviceRequestRepo;
         this.serviceCatalogRepo = serviceCatalogRepo;
-        this.medicalRecordRepo  = medicalRecordRepo;
-        this.doctorRepo         = doctorRepo;
-        this.invoiceRepository  = invoiceRepository;
+        this.medicalRecordRepo = medicalRecordRepo;
+        this.doctorRepo = doctorRepo;
+        this.invoiceRepository = invoiceRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -68,6 +71,19 @@ public class ServiceRequestService implements IServiceRequestService {
         requests.forEach(sr -> sr.setClinicalInvoice(invoice));
 
         List<ServiceRequest> saved = serviceRequestRepo.saveAll(requests);
+        notificationService.notifyPatient(
+                record.getPatient(),
+                "CLINICAL_REQUEST_CREATED",
+                "Có chỉ định cận lâm sàng mới",
+                "Bác sĩ đã chỉ định " + serviceSummary(saved)
+                        + ". Hệ thống đã tạo hóa đơn dịch vụ, vui lòng thanh toán trước khi thực hiện.",
+                "/billing");
+        notificationService.notifyAdmins(
+                "CLINICAL_REQUEST_CREATED",
+                "Có hóa đơn cận lâm sàng mới",
+                doctor.getFullName() + " đã chỉ định " + serviceSummary(saved)
+                        + " cho " + record.getPatient().getFullName() + ". Hóa đơn CLS đang chờ thanh toán.",
+                "/admin/invoices");
         return saved.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -120,8 +136,24 @@ public class ServiceRequestService implements IServiceRequestService {
             sr.setPerformedAt(LocalDateTime.now());
         }
 
-        serviceRequestRepo.save(sr);
-        return toResponse(sr);
+        ServiceRequest saved = serviceRequestRepo.save(sr);
+        if (saved.getStatus() == RequestStatus.COMPLETED) {
+            notificationService.notifyPatient(
+                    saved.getMedicalRecord().getPatient(),
+                    "CLINICAL_RESULT_READY",
+                    "Đã có kết quả cận lâm sàng",
+                    "Kết quả " + saved.getServiceCatalog().getServiceName()
+                            + " đã được cập nhật. Bạn có thể xem trong mục kết quả xét nghiệm.",
+                    "/test-results");
+            notificationService.notifyAdmins(
+                    "CLINICAL_RESULT_READY",
+                    "Kết quả cận lâm sàng đã được cập nhật",
+                    saved.getDoctor().getFullName() + " đã cập nhật kết quả "
+                            + saved.getServiceCatalog().getServiceName() + " cho "
+                            + saved.getMedicalRecord().getPatient().getFullName() + ".",
+                    "/admin/appointments");
+        }
+        return toResponse(saved);
     }
 
     @Override
@@ -136,8 +168,21 @@ public class ServiceRequestService implements IServiceRequestService {
         }
 
         sr.setStatus(RequestStatus.CANCELLED);
-        serviceRequestRepo.save(sr);
-        return toResponse(sr);
+        ServiceRequest saved = serviceRequestRepo.save(sr);
+        notificationService.notifyPatient(
+                saved.getMedicalRecord().getPatient(),
+                "CLINICAL_REQUEST_CANCELLED",
+                "Chỉ định cận lâm sàng đã bị hủy",
+                "Chỉ định " + saved.getServiceCatalog().getServiceName() + " đã bị hủy.",
+                "/test-results");
+        notificationService.notifyAdmins(
+                "CLINICAL_REQUEST_CANCELLED",
+                "Chỉ định cận lâm sàng đã bị hủy",
+                saved.getDoctor().getFullName() + " đã hủy chỉ định "
+                        + saved.getServiceCatalog().getServiceName() + " của "
+                        + saved.getMedicalRecord().getPatient().getFullName() + ".",
+                "/admin/appointments");
+        return toResponse(saved);
     }
 
     private ServiceRequest createSingleRequest(MedicalRecord record,
@@ -191,6 +236,13 @@ public class ServiceRequestService implements IServiceRequestService {
                     "Chỉ được cập nhật/thực hiện cận lâm sàng sau khi bệnh nhân thanh toán hóa đơn CLS #"
                             + invoice.getInvoiceId());
         }
+    }
+
+    private String serviceSummary(List<ServiceRequest> requests) {
+        return requests.stream()
+                .map(sr -> sr.getServiceCatalog().getServiceName())
+                .distinct()
+                .collect(Collectors.joining(" + "));
     }
 
     private ServiceRequest findById(Integer id) {

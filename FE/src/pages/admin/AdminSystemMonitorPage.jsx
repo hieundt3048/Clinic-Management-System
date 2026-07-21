@@ -34,7 +34,7 @@ const formatMoney = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency
 const formatDateTime = (value) => value ? new Date(value).toLocaleString('vi-VN') : '—';
 
 const StatCard = ({ icon: Icon, label, value, helper, tone }) => (
-  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+  <div className="rounded-xl border border-sky-200 bg-white p-4 shadow-sm">
     <div className="flex items-start justify-between gap-3">
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
@@ -50,7 +50,7 @@ const MetricRows = ({ title, data }) => {
   const entries = Object.entries(data || {});
   const total = entries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
       <h3 className="text-base font-bold text-gray-900">{title}</h3>
       <div className="mt-4 space-y-3">
         {entries.map(([key, value]) => {
@@ -149,7 +149,7 @@ const AdminSystemMonitorPage = () => {
             </div>
 
             <div className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-              <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <section className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
                 <div className="flex items-center gap-2">
                   <ShieldCheckIcon className="h-5 w-5 text-blue-600" />
                   <h3 className="text-base font-bold text-gray-900">Kiểm tra vận hành</h3>
@@ -176,7 +176,7 @@ const AdminSystemMonitorPage = () => {
               <MetricRows title="Cận lâm sàng theo trạng thái" data={snapshot.serviceRequestsByStatus} />
             </div>
 
-            <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <section className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
               <div className="flex items-center gap-2">
                 <HeartIcon className="h-5 w-5 text-blue-600" />
                 <h3 className="text-base font-bold text-gray-900">Nhắc lịch uống thuốc</h3>

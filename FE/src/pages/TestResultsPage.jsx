@@ -1,247 +1,239 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import PatientLayout from '../components/PatientLayout';
 import { getMyServiceRequests, getStoredUser } from '../services/api';
 import {
-  BeakerIcon, MagnifyingGlassIcon, FunnelIcon, ArrowPathIcon,
-  ExclamationCircleIcon, ChevronDownIcon, CalendarDaysIcon,
-  UserIcon, PhotoIcon, CheckCircleIcon, ClockIcon, XMarkIcon,
+  ArrowPathIcon,
+  BeakerIcon,
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationCircleIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  PhotoIcon,
+  UserIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
-const fmtDateTime = (s) => s ? new Date(s).toLocaleString('vi-VN') : '—';
-const fmtCurrency = (n) => new Intl.NumberFormat('vi-VN', { style:'currency', currency:'VND' }).format(n||0);
+const arr = (value) => (Array.isArray(value) ? value : []);
+const fmtDateTime = (value) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString('vi-VN');
+};
+const fmtCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
 
 const STATUS_CFG = {
-  PENDING:     { label:'Chờ thực hiện', color:'bg-yellow-100 text-yellow-700 border-yellow-200', dot:'bg-yellow-400' },
-  IN_PROGRESS: { label:'Đang thực hiện',color:'bg-blue-100 text-blue-700 border-blue-200',       dot:'bg-blue-500'  },
-  COMPLETED:   { label:'Đã có kết quả', color:'bg-green-100 text-green-700 border-green-200',    dot:'bg-green-500' },
-  CANCELLED:   { label:'Đã hủy',        color:'bg-red-100 text-red-700 border-red-200',          dot:'bg-red-400'   },
+  PENDING: { label: 'Chờ thực hiện', color: 'bg-yellow-50 text-yellow-700 border-yellow-200', dot: 'bg-yellow-400' },
+  IN_PROGRESS: { label: 'Đang thực hiện', color: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
+  COMPLETED: { label: 'Đã có kết quả', color: 'bg-green-50 text-green-700 border-green-200', dot: 'bg-green-500' },
+  CANCELLED: { label: 'Đã hủy', color: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-400' },
+};
+const INVOICE_STATUS = {
+  UNPAID: 'Chưa thanh toán',
+  PENDING_CASH: 'Chờ xác nhận tại quầy',
+  PAID: 'Đã thanh toán',
 };
 
+const FILTERS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'PENDING', label: 'Chờ thực hiện' },
+  { value: 'IN_PROGRESS', label: 'Đang thực hiện' },
+  { value: 'COMPLETED', label: 'Đã có kết quả' },
+  { value: 'CANCELLED', label: 'Đã hủy' },
+];
+
 const StatusBadge = ({ status }) => {
-  const c = STATUS_CFG[status] || STATUS_CFG.PENDING;
+  const cfg = STATUS_CFG[status] || STATUS_CFG.PENDING;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${c.color}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />{c.label}
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${cfg.color}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />{cfg.label}
     </span>
   );
 };
 
-// Modal xem ảnh phóng to
 const ImageModal = ({ src, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80" onClick={onClose}>
-    <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+    <button onClick={onClose} className="absolute right-4 top-4 rounded-full bg-white/10 p-2 transition hover:bg-white/20">
       <XMarkIcon className="h-6 w-6 text-white" />
     </button>
-    <img src={src} alt="Kết quả xét nghiệm" className="max-w-full max-h-full rounded-lg" onClick={e => e.stopPropagation()} />
+    <img src={src} alt="Kết quả xét nghiệm" className="max-h-full max-w-full rounded-lg" onClick={(e) => e.stopPropagation()} />
+  </div>
+);
+
+const Empty = ({ children }) => (
+  <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-blue-200 bg-blue-50/70 py-16 text-blue-500">
+    <BeakerIcon className="h-14 w-14 text-gray-200" />
+    <p className="text-base font-medium text-gray-500">{children}</p>
+  </div>
+);
+
+const InfoBox = ({ label, children }) => (
+  <div className="rounded-xl border border-sky-200 bg-white p-4 shadow-sm">
+    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
+    <div className="mt-2 text-sm leading-6 text-gray-800">{children || '—'}</div>
   </div>
 );
 
 const RequestCard = ({ req, onViewImage }) => {
-  const [expanded, setExpanded] = useState(false);
-  const images = req.resultImages
-    ? req.resultImages.split(',').map(s => s.trim()).filter(Boolean)
-    : [];
-
+  const images = req.resultImages ? req.resultImages.split(',').map((item) => item.trim()).filter(Boolean) : [];
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      <button onClick={() => setExpanded(v => !v)}
-        className="w-full p-4 flex items-start justify-between gap-3 text-left">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className={`p-2.5 rounded-xl shrink-0 ${req.status === 'COMPLETED' ? 'bg-green-100' : 'bg-blue-100'}`}>
-            <BeakerIcon className={`h-5 w-5 ${req.status === 'COMPLETED' ? 'text-green-600' : 'text-blue-600'}`} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900">{req.serviceName}</p>
-            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-              <UserIcon className="h-3 w-3" />BS. {req.doctorName} chỉ định
-            </p>
-            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-              <CalendarDaysIcon className="h-3 w-3" />{fmtDateTime(req.createdAt)}
-            </p>
+    <article className="rounded-xl border border-sky-200 bg-sky-50/90 p-5 shadow-md shadow-sky-100">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-bold text-blue-700">Chỉ định #{req.requestId}</p>
+          <h3 className="mt-1 text-lg font-bold text-gray-900">{req.serviceName || 'Dịch vụ cận lâm sàng'}</h3>
+          <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
+            <span className="inline-flex items-center gap-1"><UserIcon className="h-3.5 w-3.5" />BS. {req.doctorName || '—'}</span>
+            <span className="inline-flex items-center gap-1"><CalendarDaysIcon className="h-3.5 w-3.5" />{fmtDateTime(req.createdAt)}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <StatusBadge status={req.status} />
-          <ChevronDownIcon className={`h-4 w-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        <StatusBadge status={req.status} />
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <InfoBox label="Lý do chỉ định">{req.indicationReason || '—'}</InfoBox>
+        <InfoBox label="Chi phí">{fmtCurrency(req.basePrice)}</InfoBox>
+        <InfoBox label="Hóa đơn">
+          {req.invoiceId ? `#${req.invoiceId} · ${INVOICE_STATUS[req.invoiceStatus] || req.invoiceStatus || 'Chưa rõ'}` : 'Chưa có hóa đơn'}
+        </InfoBox>
+      </div>
+
+      {req.status === 'COMPLETED' ? (
+        <div className="mt-4 rounded-xl border border-green-100 bg-green-50 p-4">
+          <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-green-700">
+            <CheckCircleIcon className="h-4 w-4" />Kết quả
+          </p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-green-900">{req.resultSummary || 'Đã hoàn thành nhưng chưa có mô tả kết quả.'}</p>
+          {req.performedAt && <p className="mt-3 text-xs font-semibold text-green-700">Thực hiện lúc: {fmtDateTime(req.performedAt)}</p>}
         </div>
-      </button>
-
-      {expanded && (
-        <div className="border-t border-gray-100 px-4 py-3 bg-gray-50 space-y-3">
-          {req.indicationReason && (
-            <p className="text-sm text-gray-600">
-              <span className="text-gray-400">Lý do chỉ định:</span> {req.indicationReason}
-            </p>
-          )}
-          {req.basePrice != null && (
-            <p className="text-sm text-gray-600">
-              <span className="text-gray-400">Chi phí:</span> {fmtCurrency(req.basePrice)}
-            </p>
-          )}
-
-          {req.status === 'COMPLETED' ? (
-            <>
-              {req.resultSummary && (
-                <div className="bg-white border border-green-100 rounded-lg px-3 py-2.5">
-                  <p className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-1 flex items-center gap-1">
-                    <CheckCircleIcon className="h-3.5 w-3.5" />Kết quả
-                  </p>
-                  <p className="text-sm text-gray-700">{req.resultSummary}</p>
-                </div>
-              )}
-              {images.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
-                    <PhotoIcon className="h-3.5 w-3.5" />Hình ảnh kết quả
-                  </p>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {images.map((url, i) => (
-                      <button key={i} onClick={() => onViewImage(url)}
-                        className="aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition">
-                        <img src={url} alt={`Kết quả ${i+1}`} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {req.performedAt && (
-                <p className="text-xs text-gray-400">
-                  Thực hiện lúc: {fmtDateTime(req.performedAt)}
-                </p>
-              )}
-              {!req.resultSummary && images.length === 0 && (
-                <p className="text-sm text-gray-400 italic">Chưa có chi tiết kết quả</p>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-gray-400 bg-white rounded-lg border border-gray-100 px-3 py-2.5">
-              <ClockIcon className="h-4 w-4" />
-              {req.status === 'PENDING' ? 'Đang chờ thực hiện xét nghiệm' :
-               req.status === 'IN_PROGRESS' ? 'Đang trong quá trình thực hiện' :
-               'Yêu cầu đã bị hủy'}
-            </div>
-          )}
+      ) : (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-100/70 px-4 py-3 text-sm text-gray-500">
+          <ClockIcon className="h-4 w-4" />
+          {req.status === 'PENDING'
+            ? 'Đang chờ thanh toán hoặc chờ thực hiện dịch vụ.'
+            : req.status === 'IN_PROGRESS'
+              ? 'Dịch vụ đang được thực hiện.'
+              : 'Chỉ định này đã bị hủy.'}
         </div>
       )}
-    </div>
+
+      {images.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-2 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-gray-500"><PhotoIcon className="h-4 w-4" />Hình ảnh kết quả</p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {images.map((url, index) => (
+              <button key={index} onClick={() => onViewImage(url)} className="aspect-square overflow-hidden rounded-lg border border-gray-200 transition hover:border-blue-400">
+                <img src={url} alt={`Kết quả ${index + 1}`} className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </article>
   );
 };
 
-const FILTERS = [
-  { value:'', label:'Tất cả' },
-  { value:'PENDING',     label:'Chờ thực hiện' },
-  { value:'IN_PROGRESS', label:'Đang thực hiện' },
-  { value:'COMPLETED',   label:'Đã có kết quả' },
-  { value:'CANCELLED',   label:'Đã hủy' },
-];
-
 const TestResultsPage = () => {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
-  const [search, setSearch]     = useState('');
-  const [filter, setFilter]     = useState('');
-  const [viewImage, setViewImage] = useState(null);
-
   const user = getStoredUser();
   const patientId = user?.patientId ?? user?.userId;
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('');
+  const [viewImage, setViewImage] = useState(null);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true); setError('');
-      try {
-        // GET /api/service-requests/patient/{patientId}
-        const data = await getMyServiceRequests(patientId);
-        setRequests(Array.isArray(data) ? data : []);
-      } catch (e) {
-        if (e.response?.status === 404) setRequests([]);
-        else setError(e.response?.data?.message || 'Không thể tải kết quả xét nghiệm.');
-      } finally { setLoading(false); }
-    };
-    if (patientId) load();
+  const load = useCallback(async () => {
+    if (!patientId) {
+      setLoading(false);
+      setError('Không tìm thấy mã bệnh nhân trong phiên đăng nhập.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getMyServiceRequests(patientId);
+      setRequests(arr(data).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)));
+    } catch (err) {
+      if (err.response?.status === 404) setRequests([]);
+      else setError(err.response?.data?.message || 'Không thể tải kết quả xét nghiệm.');
+    } finally {
+      setLoading(false);
+    }
   }, [patientId]);
 
+  useEffect(() => { load(); }, [load]);
+
   const filtered = useMemo(() => {
-    return requests.filter(r => {
-      const matchFilter = !filter || r.status === filter;
-      const q = search.toLowerCase();
+    const q = search.trim().toLowerCase();
+    return requests.filter((req) => {
+      const matchFilter = !filter || req.status === filter;
       const matchSearch = !q ||
-        r.serviceName?.toLowerCase().includes(q) ||
-        r.doctorName?.toLowerCase().includes(q);
+        req.serviceName?.toLowerCase().includes(q) ||
+        req.doctorName?.toLowerCase().includes(q) ||
+        req.indicationReason?.toLowerCase().includes(q) ||
+        req.resultSummary?.toLowerCase().includes(q);
       return matchFilter && matchSearch;
     });
   }, [requests, filter, search]);
 
   const stats = useMemo(() => ({
-    total:     requests.length,
-    pending:   requests.filter(r => ['PENDING','IN_PROGRESS'].includes(r.status)).length,
-    completed: requests.filter(r => r.status === 'COMPLETED').length,
+    total: requests.length,
+    pending: requests.filter((req) => ['PENDING', 'IN_PROGRESS'].includes(req.status)).length,
+    completed: requests.filter((req) => req.status === 'COMPLETED').length,
   }), [requests]);
 
   return (
     <PatientLayout>
-      <div className="p-6 max-w-3xl mx-auto space-y-5">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Kết quả xét nghiệm</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Theo dõi các chỉ định cận lâm sàng và kết quả</p>
+      <div className="mx-auto max-w-5xl space-y-5 p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Kết quả xét nghiệm</h1>
+            <p className="mt-0.5 text-sm text-gray-500">Theo dõi đầy đủ chỉ định cận lâm sàng, hóa đơn liên quan và kết quả.</p>
+          </div>
+          <button type="button" onClick={load} className="inline-flex w-fit items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+            <ArrowPathIcon className="h-4 w-4" />Tải lại
+          </button>
         </div>
 
         {!loading && !error && (
           <div className="grid grid-cols-3 gap-3">
-            {[
-              { label:'Tổng', value: stats.total, color:'text-gray-800', bg:'bg-gray-50' },
-              { label:'Chờ kết quả', value: stats.pending, color:'text-yellow-700', bg:'bg-yellow-50' },
-              { label:'Đã có kết quả', value: stats.completed, color:'text-green-700', bg:'bg-green-50' },
-            ].map(s => (
-              <div key={s.label} className={`${s.bg} rounded-xl px-4 py-3 border border-gray-100`}>
-                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-              </div>
-            ))}
+            <div className="rounded-xl border border-sky-200 bg-sky-100/70 px-4 py-3"><p className="text-2xl font-bold text-blue-800">{stats.total}</p><p className="text-xs font-semibold text-blue-600">Tổng</p></div>
+            <div className="rounded-xl border border-yellow-100 bg-yellow-50 px-4 py-3"><p className="text-2xl font-bold text-yellow-700">{stats.pending}</p><p className="text-xs font-semibold text-yellow-600">Chờ xử lý</p></div>
+            <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3"><p className="text-2xl font-bold text-green-700">{stats.completed}</p><p className="text-xs font-semibold text-green-600">Đã có kết quả</p></div>
           </div>
         )}
 
         <div className="flex gap-3">
           <div className="relative flex-1">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input type="text" placeholder="Tìm theo dịch vụ, bác sĩ..."
-              value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Tìm theo dịch vụ, bác sĩ, lý do, kết quả..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <div className="relative">
-            <FunnelIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <select value={filter} onChange={e => setFilter(e.target.value)}
-              className="pl-9 pr-8 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none cursor-pointer">
-              {FILTERS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+            <FunnelIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="cursor-pointer appearance-none rounded-lg border border-gray-200 bg-white py-2.5 pl-9 pr-8 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {FILTERS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </div>
         </div>
 
-        {loading && (
-          <div className="flex justify-center py-16">
-            <ArrowPathIcon className="h-7 w-7 animate-spin text-blue-500" />
-          </div>
-        )}
+        {loading && <div className="flex justify-center py-16"><ArrowPathIcon className="h-7 w-7 animate-spin text-blue-500" /></div>}
+        {!loading && error && <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><ExclamationCircleIcon className="h-5 w-5" />{error}</div>}
+        {!loading && !error && filtered.length === 0 && <Empty>{requests.length === 0 ? 'Chưa có chỉ định xét nghiệm nào' : 'Không tìm thấy kết quả phù hợp'}</Empty>}
 
-        {!loading && error && (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-            <ExclamationCircleIcon className="h-5 w-5 shrink-0" />{error}
-          </div>
-        )}
-
-        {!loading && !error && filtered.length === 0 && (
-          <div className="flex flex-col items-center py-20 gap-3 text-gray-400">
-            <BeakerIcon className="h-14 w-14 text-gray-200" />
-            <p className="text-base font-medium text-gray-500">
-              {requests.length === 0 ? 'Chưa có chỉ định xét nghiệm nào' : 'Không tìm thấy kết quả'}
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          {filtered.map(req => (
-            <RequestCard key={req.requestId} req={req} onViewImage={setViewImage} />
-          ))}
+        <div className="space-y-4">
+          {filtered.map((req) => <RequestCard key={req.requestId} req={req} onViewImage={setViewImage} />)}
         </div>
       </div>
 

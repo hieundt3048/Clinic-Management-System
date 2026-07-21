@@ -1,6 +1,7 @@
 package cms.app.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -24,16 +25,18 @@ import cms.app.Repository.SpecialtyRepository;
 import cms.app.Service.Factory.AppointmentFactory;
 import jakarta.transaction.Transactional;
 
-
 @Service
 public class AppointmentService implements IAppointmentService {
+
+    private static final DateTimeFormatter DISPLAY_DATE_TIME = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     private final AppointmentRepository appointmentRepo;
     private final PatientRepository patientRepo;
     private final DoctorRepository doctorRepo;
     private final SpecialtyRepository specialtyRepo;
     private final AppointmentFactory appointmentFactory;
-    private final ServiceCatalogRepository serviceCatalogRepo; // ← thêm
+    private final ServiceCatalogRepository serviceCatalogRepo;
+    private final NotificationService notificationService;
 
     public AppointmentService(
             AppointmentRepository appointmentRepo,
@@ -41,20 +44,20 @@ public class AppointmentService implements IAppointmentService {
             DoctorRepository doctorRepo,
             SpecialtyRepository specialtyRepo,
             AppointmentFactory appointmentFactory,
-            ServiceCatalogRepository serviceCatalogRepo) { // ← thêm
-        this.appointmentRepo     = appointmentRepo;
-        this.patientRepo         = patientRepo;
-        this.doctorRepo          = doctorRepo;
-        this.specialtyRepo       = specialtyRepo;
-        this.appointmentFactory  = appointmentFactory;
-        this.serviceCatalogRepo  = serviceCatalogRepo; // ← thêm
+            ServiceCatalogRepository serviceCatalogRepo,
+            NotificationService notificationService) {
+        this.appointmentRepo = appointmentRepo;
+        this.patientRepo = patientRepo;
+        this.doctorRepo = doctorRepo;
+        this.specialtyRepo = specialtyRepo;
+        this.appointmentFactory = appointmentFactory;
+        this.serviceCatalogRepo = serviceCatalogRepo;
+        this.notificationService = notificationService;
     }
 
     @Override
     @Transactional
     public AppointmentResponseDTO bookAppointment(AppointmentRequestDTO request) {
-
-        // 0. Kiểm tra đầu vào
         if (request.getPatientId() == null)
             throw new BusinessLogicException("Patient ID không được để trống.");
         if (request.getDoctorId() == null)
@@ -64,7 +67,6 @@ public class AppointmentService implements IAppointmentService {
         if (request.getAppointmentDate() == null)
             throw new BusinessLogicException("Ngày hẹn không được để trống.");
 
-        // 1. Kiểm tra tồn tại
         Patient patient = patientRepo.findById(request.getPatientId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy bệnh nhân với ID: " + request.getPatientId()));
@@ -77,17 +79,13 @@ public class AppointmentService implements IAppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy chuyên khoa với ID: " + request.getSpecialtyId()));
 
-        // 1b. Gắn phí khám lâm sàng cho lịch hẹn.
-        // CLS không được gắn ở bước đặt lịch; CLS chỉ do bác sĩ chỉ định sau khi khám.
         ServiceCatalog service = resolveConsultationService(request.getServiceId());
 
-        // 2. Kiểm tra thời gian
         if (request.getAppointmentDate().isBefore(LocalDateTime.now()))
             throw new BusinessLogicException("Không thể đặt lịch vào thời gian trong quá khứ!");
 
-        // 3. Kiểm tra trùng lịch
         LocalDateTime startTime = request.getAppointmentDate();
-        LocalDateTime endTime   = startTime.plusMinutes(30);
+        LocalDateTime endTime = startTime.plusMinutes(30);
         List<Appointment> overlapping = appointmentRepo.findOverlappingAppointments(
                 doctor.getDoctorId(), startTime, endTime);
 
@@ -95,20 +93,27 @@ public class AppointmentService implements IAppointmentService {
             throw new BusinessLogicException(
                     "Bác sĩ đã có lịch khám vào khung giờ này. Vui lòng chọn giờ khác.");
 
-        // 4. Tạo entity
         boolean followUp = Boolean.TRUE.equals(request.getFollowUp());
         Appointment newAppointment = appointmentFactory.createPendingAppointment(
                 patient, doctor, specialty,
                 request.getAppointmentDate(), request.getReason(), followUp);
 
-        // 4b. Gán dịch vụ ← quan trọng
         if (newAppointment != null) {
             newAppointment.setService(service);
-        }
-
-        // 5. Lưu DB
-        if (newAppointment != null) {
             Appointment saved = appointmentRepo.save(newAppointment);
+            notificationService.notifyDoctor(
+                    saved.getDoctor(),
+                    "APPOINTMENT_NEW",
+                    "Có lịch khám mới",
+                    saved.getPatient().getFullName() + " vừa đặt lịch khám lúc "
+                            + formatAppointmentTime(saved) + ". Vui lòng kiểm tra và xác nhận lịch.",
+                    "/doctor");
+            notificationService.notifyAdmins(
+                    "APPOINTMENT_NEW",
+                    "Có lịch hẹn mới cần xử lý",
+                    saved.getPatient().getFullName() + " vừa đặt lịch với "
+                            + saved.getDoctor().getFullName() + " lúc " + formatAppointmentTime(saved) + ".",
+                    "/admin/appointments");
             return toResponse(saved);
         }
 
@@ -126,6 +131,19 @@ public class AppointmentService implements IAppointmentService {
 
         appointment.setStatus(AppointmentStatus.CANCELLED);
         appointmentRepo.save(appointment);
+        notificationService.notifyDoctor(
+                appointment.getDoctor(),
+                "APPOINTMENT_CANCELLED",
+                "Lịch khám đã bị hủy",
+                "Lịch khám của " + appointment.getPatient().getFullName() + " lúc "
+                        + formatAppointmentTime(appointment) + " đã bị hủy.",
+                "/doctor");
+        notificationService.notifyAdmins(
+                "APPOINTMENT_CANCELLED",
+                "Lịch khám đã bị hủy",
+                "Lịch khám của " + appointment.getPatient().getFullName() + " với "
+                        + appointment.getDoctor().getFullName() + " lúc " + formatAppointmentTime(appointment) + " đã bị hủy.",
+                "/admin/appointments");
     }
 
     @Override
@@ -150,7 +168,7 @@ public class AppointmentService implements IAppointmentService {
 
         AppointmentStatus current = appointment.getStatus();
         boolean valid =
-                (current == AppointmentStatus.PENDING   && newStatus == AppointmentStatus.CONFIRMED)
+                (current == AppointmentStatus.PENDING && newStatus == AppointmentStatus.CONFIRMED)
              || (current == AppointmentStatus.CONFIRMED && newStatus == AppointmentStatus.COMPLETED);
 
         if (!valid)
@@ -159,6 +177,49 @@ public class AppointmentService implements IAppointmentService {
 
         appointment.setStatus(newStatus);
         appointmentRepo.save(appointment);
+
+        if (newStatus == AppointmentStatus.CONFIRMED) {
+            notificationService.notifyPatient(
+                    appointment.getPatient(),
+                    "APPOINTMENT_CONFIRMED",
+                    "Lịch khám đã được xác nhận",
+                    "Lịch khám với " + appointment.getDoctor().getFullName() + " lúc "
+                            + formatAppointmentTime(appointment) + " đã được xác nhận.",
+                    "/appointment-notifications");
+            notificationService.notifyDoctor(
+                    appointment.getDoctor(),
+                    "APPOINTMENT_CONFIRMED",
+                    "Lịch khám đã được xác nhận",
+                    "Lịch khám của " + appointment.getPatient().getFullName() + " lúc "
+                            + formatAppointmentTime(appointment) + " đã sẵn sàng trong lịch làm việc.",
+                    "/doctor");
+            if (!admin) {
+                notificationService.notifyAdmins(
+                        "APPOINTMENT_CONFIRMED",
+                        "Bác sĩ đã xác nhận lịch khám",
+                        appointment.getDoctor().getFullName() + " đã xác nhận lịch khám của "
+                                + appointment.getPatient().getFullName() + " lúc " + formatAppointmentTime(appointment) + ".",
+                        "/admin/appointments");
+            }
+        } else if (newStatus == AppointmentStatus.COMPLETED) {
+            notificationService.notifyPatient(
+                    appointment.getPatient(),
+                    "APPOINTMENT_COMPLETED",
+                    "Buổi khám đã hoàn thành",
+                    "Buổi khám với " + appointment.getDoctor().getFullName()
+                            + " đã hoàn thành. Bạn có thể theo dõi bệnh án, đơn thuốc hoặc hóa đơn nếu có phát sinh.",
+                    "/appointment-history");
+            notificationService.notifyAdmins(
+                    "APPOINTMENT_COMPLETED",
+                    "Bác sĩ đã hoàn thành buổi khám",
+                    appointment.getDoctor().getFullName() + " đã hoàn thành buổi khám của "
+                            + appointment.getPatient().getFullName() + ".",
+                    "/admin/appointments");
+        }
+    }
+
+    private String formatAppointmentTime(Appointment appointment) {
+        return appointment.getAppointmentDate().format(DISPLAY_DATE_TIME);
     }
 
     private ServiceCatalog resolveConsultationService(Integer serviceId) {
@@ -179,6 +240,7 @@ public class AppointmentService implements IAppointmentService {
         }
         return service;
     }
+
     private AppointmentResponseDTO toResponse(Appointment a) {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();
         dto.setAppointmentId(a.getAppointmentId());

@@ -56,8 +56,8 @@ const ReminderCard = ({ reminder, onToggle, onDelete, toggling, deleting }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className={`bg-white rounded-xl border shadow-sm transition-all ${
-      !reminder.active || expired ? 'border-gray-200 opacity-60' : 'border-blue-100 hover:shadow-md'
+    <div className={`rounded-xl border bg-sky-50/90 shadow-md shadow-sky-100 transition-all ${
+      !reminder.active || expired ? 'border-slate-200 opacity-70' : 'border-sky-200 hover:shadow-lg'
     }`}>
       <div className="p-4 flex items-start gap-4">
         <div className={`mt-0.5 p-2.5 rounded-xl shrink-0 ${
@@ -103,14 +103,14 @@ const ReminderCard = ({ reminder, onToggle, onDelete, toggling, deleting }) => {
           </div>
 
           {reminder.note && (
-            <p className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-100">
+            <p className="mt-2 text-xs text-gray-600 bg-white rounded-lg px-3 py-1.5 border border-sky-100">
               📝 {reminder.note}
             </p>
           )}
         </div>
       </div>
 
-      <div className="border-t border-gray-100 px-4 py-2.5 flex items-center gap-2">
+      <div className="border-t border-sky-200 bg-sky-100/40 px-4 py-2.5 flex items-center gap-2">
         {!expired && (
           <button
             onClick={() => onToggle(reminder.reminderId, !reminder.active)}
@@ -423,11 +423,11 @@ const MedicationReminderPage = () => {
         {!loading && !error && (
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Tổng', value: reminders.length, color: 'text-gray-800', bg: 'bg-gray-50' },
+              { label: 'Tổng', value: reminders.length, color: 'text-sky-800', bg: 'bg-sky-50' },
               { label: 'Đang bật', value: active.length, color: 'text-green-700', bg: 'bg-green-50' },
-              { label: 'Tắt / Hết hạn', value: inactive.length, color: 'text-gray-500', bg: 'bg-gray-50' },
+              { label: 'Tắt / Hết hạn', value: inactive.length, color: 'text-slate-600', bg: 'bg-slate-100' },
             ].map(s => (
-              <div key={s.label} className={`${s.bg} rounded-xl px-4 py-3 border border-gray-100`}>
+              <div key={s.label} className={`${s.bg} rounded-xl px-4 py-3 border border-sky-200 shadow-sm`}>
                 <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
               </div>
@@ -436,7 +436,7 @@ const MedicationReminderPage = () => {
         )}
 
         {loading && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sky-200 bg-sky-50/80 py-16 gap-3">
             <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-500" />
             <p className="text-sm text-gray-400">Đang tải...</p>
           </div>
@@ -450,7 +450,7 @@ const MedicationReminderPage = () => {
         )}
 
         {!loading && !error && reminders.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-sky-200 bg-sky-50/80 py-16 gap-3 text-sky-500">
             <BellSlashIcon className="h-14 w-14 text-gray-200" />
             <p className="text-base font-medium text-gray-500">Chưa có lịch nhắc nào</p>
             <p className="text-sm">Nhấn "Tạo nhắc nhở" để bắt đầu</p>

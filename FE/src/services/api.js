@@ -264,3 +264,15 @@ export const toggleAdminUserStatus = (userId, active) =>
 // GET /api/admin/system-monitor → system monitoring snapshot
 export const getSystemMonitorSnapshot = () =>
   apiClient.get('/admin/system-monitor').then((r) => r.data.data);
+
+export const getMyNotifications = () =>
+  apiClient.get('/notifications/me').then((r) => r.data.data || []);
+
+export const getUnreadNotificationCount = () =>
+  apiClient.get('/notifications/unread-count').then((r) => r.data.data || 0);
+
+export const markNotificationRead = (notificationId) =>
+  apiClient.patch(`/notifications/${notificationId}/read`).then((r) => r.data.data);
+
+export const markAllNotificationsRead = () =>
+  apiClient.patch('/notifications/read-all').then((r) => r.data.data);

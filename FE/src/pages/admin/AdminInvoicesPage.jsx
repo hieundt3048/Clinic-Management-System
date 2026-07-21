@@ -135,14 +135,14 @@ const AdminInvoicesPage = () => {
         )}
 
         {!loading && !error && (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 text-xs text-gray-400">
+          <div className="rounded-xl border border-sky-200 bg-sky-50/90 shadow-md shadow-sky-100 overflow-hidden">
+            <div className="px-4 py-3 border-b border-sky-200 bg-sky-100/60 text-xs text-gray-400">
               Hiển thị {filtered.length} / {invoices.length} hóa đơn
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                  <tr className="bg-sky-100/60 text-xs text-sky-800 uppercase tracking-wide">
                     <th className="px-4 py-3 font-semibold">Mã HĐ</th>
                     <th className="px-4 py-3 font-semibold">Mã BN</th>
                     <th className="px-4 py-3 font-semibold">Loại</th>

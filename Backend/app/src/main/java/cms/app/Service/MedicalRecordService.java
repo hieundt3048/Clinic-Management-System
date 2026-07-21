@@ -23,13 +23,16 @@ public class MedicalRecordService implements IMedicalRecordService {
     private final MedicalRecordRepository recordRepo;
     private final AppointmentRepository appointmentRepo;
     private final PrescriptionRepository prescriptionRepo;
+    private final NotificationService notificationService;
 
     public MedicalRecordService(MedicalRecordRepository recordRepo,
                                  AppointmentRepository appointmentRepo,
-                                 PrescriptionRepository prescriptionRepo) {
-        this.recordRepo       = recordRepo;
-        this.appointmentRepo  = appointmentRepo;
+                                 PrescriptionRepository prescriptionRepo,
+                                 NotificationService notificationService) {
+        this.recordRepo = recordRepo;
+        this.appointmentRepo = appointmentRepo;
         this.prescriptionRepo = prescriptionRepo;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -60,6 +63,13 @@ public class MedicalRecordService implements IMedicalRecordService {
         record.setRecommendedFollowUpDate(request.getRecommendedFollowUpDate());
 
         MedicalRecord saved = recordRepo.save(record);
+        notificationService.notifyPatient(
+                saved.getPatient(),
+                "MEDICAL_RECORD_CREATED",
+                "Bệnh án mới đã được cập nhật",
+                "Bác sĩ " + saved.getDoctor().getFullName()
+                        + " đã ghi nhận chẩn đoán và hướng điều trị cho buổi khám của bạn.",
+                "/medical-history");
         return toResponse(saved);
     }
 
@@ -82,8 +92,16 @@ public class MedicalRecordService implements IMedicalRecordService {
         record.setRecommendedFollowUpDate(request.getRecommendedFollowUpDate());
 
         MedicalRecord saved = recordRepo.save(record);
+        notificationService.notifyPatient(
+                saved.getPatient(),
+                "MEDICAL_RECORD_UPDATED",
+                "Bệnh án đã được cập nhật",
+                "Bác sĩ " + saved.getDoctor().getFullName()
+                        + " vừa cập nhật chẩn đoán hoặc hướng điều trị trong bệnh án của bạn.",
+                "/medical-history");
         return toResponse(saved);
     }
+
     @Override
     @Transactional(readOnly = true)
     public List<MedicalRecordResponse> getByDoctor(Integer doctorId) {
